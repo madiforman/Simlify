@@ -1,0 +1,28 @@
+{
+  "name": "db-termproject",
+  "version": "1.0.0",
+  "description": "term project",
+  "main": "script.js",
+  "scripts": {
+    "test": "standard"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/madiforman/DB-termProject.git"
+  },
+  "keywords": [
+    "spotify"
+  ],
+  "author": "Ben M, Seung P, Mitch H, Madi F",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/madiforman/DB-termProject/issues"
+  },
+  "homepage": "https://github.com/madiforman/DB-termProject#readme",
+  "dependencies": {
+    "cookie-parser": "^1.4.6",
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
+    "request": "^2.88.2"
+  }
+}

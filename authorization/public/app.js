@@ -71,6 +71,13 @@
           minutes = Math.floor(data.total / 60000);
           seconds = ((data.total % 60000) / 1000).toFixed(0);
           data.total = minutes + ":" + (seconds < 10 ? "0" : "") + seconds;
+          
+          // get track ID's
+          var trackIds = [];
+          for(var i = 0; i < data.trackList.length; i++){
+            var arr = data.trackList[i].uri.split(":");
+            trackIds.push(arr[arr.length-1]);
+          }
   
           tracksPlaceholder.innerHTML = tracksTemplate({
             tracks: data.trackList,
@@ -79,8 +86,9 @@
             num: domNumber,
             name: displayName,
             period: domPeriod,
+            trackIds: trackIds,
           });
-          console.log(data.trackList);
+          console.log(trackIds);
         },
       });
   }

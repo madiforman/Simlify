@@ -1,0 +1,26 @@
+/*One table
+	Users: userID, Name
+	Music: trackID, trackName, Acousticness, Danceability, Energy, Livelyness, Valence, Speechiness, Tempo
+	UserTracks: UserID, MusicID*/
+	
+function giveInserts(trackInfo, trackAnalysis,UserID){
+	var statements = []
+	for (var i = 0; i < trackInfo.length;i++){
+		let songName = trackInfo.trackList[i].name;
+		let songID = trackInfo.trackList[i].id;
+		let Acousticness = features[i].acousticness;
+		let Danceability = features[i].danceability;
+		let Energy = features[i].energy;
+		let Livelyness = features[i].livelyness;
+		let Valence = features[i].valence;
+		let Speechiness = features[i].speechiness;
+		let Tempo = features[i].tempo;
+		statements.push(`INSERT INTO Music (trackID, trackName, Acousticness, Danceability, Energy, Livelyness, Valence, Speechiness, Tempo)
+				VALUES (${songID}, ${Acousticness}, ${Danceability},  ${Energy}, ${Livelyness}, ${valence}, ${Speechiness}, ${Tempo})`)
+		statements.push(`INSERT INTO Users (userID, MusicID) 
+		VALUES ( ${UserID}, ${MusicID})`)
+	}
+	return statements;
+	
+
+	

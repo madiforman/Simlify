@@ -5,15 +5,6 @@
    * @return Object
    */
 
-  var displayName = "APP NAME";
-  var dateOptions = {
-    weekday: "long",
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  };
-  var today = new Date();
-
   function getHashParams() {
     var hashParams = {};
     var e, r = /([^&;=]+)=?([^&;]*)/g,
@@ -32,45 +23,33 @@
       tracksTemplate = Handlebars.compile(tracksSource),
       tracksPlaceholder = document.getElementById('tracks');
 
-  /////////////////////////
-  function retrieveTracks(timeRange, domNumber, domPeriod) {
+  /**
+   * This function takes a time range and generates a user's top tracks. It then takes the ID's
+   * of the tracks and generates the audio features of each track
+   * @param timeRange a time range for the set of tracks
+   */
+  function retrieveTracks(timeRange) {
+      // Get top tracks of user
       $.ajax({
-        url: `https://api.spotify.com/v1/me/top/tracks?time_range=${timeRange}&limit=10&offset=5`,
+        url: `https://api.spotify.com/v1/me/top/tracks?time_range=${timeRange}&limit=25&offset=0`,
         headers: {
           Authorization: "Bearer " + access_token,
         },
         success: function (response) {
           let data = {
             trackList: response.items,
-            total: 0,
-            date: today.toLocaleDateString("en-US", dateOptions).toUpperCase(),
-            json: true,
           };
           for (var i = 0; i < data.trackList.length; i++) {
-            data.trackList[i].name = data.trackList[i].name.toUpperCase() + " - ";
-            data.total += data.trackList[i].duration_ms;
-            data.trackList[i].id = (i + 1 < 10 ? "0" : "") + (i + 1);
-            let minutes = Math.floor(data.trackList[i].duration_ms / 60000);
-            let seconds = (
-              (data.trackList[i].duration_ms % 60000) /
-              1000
-            ).toFixed(0);
-            data.trackList[i].duration_ms =
-              minutes + ":" + (seconds < 10 ? "0" : "") + seconds;
+            data.trackList[i].name = data.trackList[i].name + " - ";
             for (var j = 0; j < data.trackList[i].artists.length; j++) {
               data.trackList[i].artists[j].name =
                 data.trackList[i].artists[j].name.trim();
-              data.trackList[i].artists[j].name =
-                data.trackList[i].artists[j].name.toUpperCase();
               if (j != data.trackList[i].artists.length - 1) {
                 data.trackList[i].artists[j].name =
                   data.trackList[i].artists[j].name + ", ";
               }
             }
           }
-          minutes = Math.floor(data.total / 60000);
-          seconds = ((data.total % 60000) / 1000).toFixed(0);
-          data.total = minutes + ":" + (seconds < 10 ? "0" : "") + seconds;
           
           // get track ID's
           var trackIds = [];
@@ -81,18 +60,29 @@
   
           tracksPlaceholder.innerHTML = tracksTemplate({
             tracks: data.trackList,
-            total: data.total,
-            time: data.date,
-            num: domNumber,
-            name: displayName,
-            period: domPeriod,
             trackIds: trackIds,
           });
-          console.log(trackIds);
+          // get string combining all track IDs
+          var ids = "";
+          for(var i = 0; i < trackIds.length-2; i++){
+            ids += trackIds[i] + "%";
+          }
+          ids+=trackIds[trackIds.length-1];
+          // get track audio features
+          $.ajax({
+            url: `https://api.spotify.com/v1/audio-features?ids=${trackIds}`,
+            headers: {
+              Authorization: "Bearer " + access_token,
+            },
+            success: function (response) {
+              let audio = {
+                features: response.audio_features,
+              };
+            }
+          });
         },
       });
   }
-  ////////////////
 
   var params = getHashParams();
 
@@ -148,7 +138,7 @@
     }, false);
 
     document.getElementById("get-track").addEventListener("click", function () {
-      retrieveTracks("short_term", 1, "LAST MONTH");
+      retrieveTracks("short_term");
       },
       false
     );

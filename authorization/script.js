@@ -6,12 +6,12 @@
  * For more information, read
  * https://developer.spotify.com/web-api/authorization-guide/#authorization_code_flow
  */
-
 var express = require('express'); // Express web server framework
 var request = require('request'); // "Request" library
 var cors = require('cors');
 var querystring = require('querystring');
 var cookieParser = require('cookie-parser');
+var sqlite3 = require('sqlite3').verbose();
 
 var client_id = 'a2bd214fd5d44b278a1625e0f5376057'; // Your client id
 var client_secret = '546e170d6d1042eeab670d4f84d233f8'; // Your secret
@@ -146,3 +146,4 @@ app.get('/refresh_token', function(req, res) {
 
 console.log('Listening on 8888');
 app.listen(8888);
+

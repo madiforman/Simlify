@@ -1,12 +1,10 @@
-(function () {
-
+(function(){
   /**
    * Obtains parameters from the hash of the URL
    * @return Object
    */
   var musicInserts = [];
   var userInserts = [];
-
   function getHashParams() {
     var hashParams = {};
     var e, r = /([^&;=]+)=?([^&;]*)/g,
@@ -29,11 +27,12 @@
   Users: userID, Name
   Music: trackID, trackName, Acousticness, Danceability, Energy, Livelyness, Valence, Speechiness, Tempo
   UserTracks: UserID, MusicID*/
-  function giveMusicInserts(trackInfo, features){
+  function giveMusicInserts(trackList, features){
     var statements = [];
-    for (var i = 0; i < trackInfo.trackList.length;i++){
-      let songName = trackInfo.trackList[i].name;
-      let songID = trackInfo.trackList[i].id;
+    let i = 0;
+    features.forEach(index => {
+      let songName = trackList[i].name;
+      let songID = trackList[i].id;
       let Acousticness = features[i].acousticness;
       let Danceability = features[i].danceability;
       let Energy = features[i].energy;
@@ -41,9 +40,10 @@
       let Valence = features[i].valence;
       let Speechiness = features[i].speechiness;
       let Tempo = features[i].tempo;
-      statements.push(`INSERT INTO Music (trackID, trackName, Acousticness, Danceability, Energy, Liveness, Valence, Speechiness, Tempo)
-        VALUES (${songID}, ${songName}, ${Acousticness}, ${Danceability},  ${Energy}, ${Liveness}, ${Valence}, ${Speechiness}, ${Tempo})`);
-    }
+      statements.push(`INSERT INTO Music VALUES (${songID}, ${songName}, ${Acousticness}, ${Danceability},  ${Energy}, ${Liveness}, ${Valence}, ${Speechiness}, ${Tempo})`);
+      i++;
+    })
+   console.log(statements);
     return statements;
   }
 
@@ -51,13 +51,13 @@
     var statements = []
     let userID = userInfo.id;
     let userName = userInfo.display_name;
-    statements.push(`INSERT INTO Users (userID, userName) 
-      VALUES ( ${userID}, ${userName})`);
+    statements.push(`INSERT INTO Users VALUES (${userID}, ${userName})`);
+    console.log(statements);
     return statements;
   }
 
   let tracks = {};
-  let audio = {};
+ //let audio = {};
   /**
    * This function takes a time range and generates a user's top tracks. It then takes the ID's
    * of the tracks and generates the audio features of each track
@@ -83,59 +83,49 @@
         access_token: access_token,
         refresh_token: refresh_token
       });
-
+//MAKING REQUEST FOR TOP TRACKS
       $.ajax({
-        url: `https://api.spotify.com/v1/me/top/tracks?time_range=short_term&limit=25&offset=0`,
+        url: `https://api.spotify.com/v1/me/top/tracks?time_range=short_term&limit=10&offset=5`,
         headers: {
           Authorization: "Bearer " + access_token,
         },
         success: function (response) {
-          tracks = {
-            trackList: response.items,
-          };
-          for (var i = 0; i < tracks.trackList.length; i++) {
-            for (var j = 0; j < tracks.trackList[i].artists.length; j++) {
-              tracks.trackList[i].artists[j].name =
-                tracks.trackList[i].artists[j].name.trim();
-              if (j != tracks.trackList[i].artists.length - 1) {
-                tracks.trackList[i].artists[j].name =
-                  tracks.trackList[i].artists[j].name + ", ";
-              }
-            }
-          }
-          
+          let trackList = response.items //all tracks 
+          // console.log(trackList.length);
           // get track ID's
           var trackIds = [];
-          for(var i = 0; i < tracks.trackList.length; i++){
-            var arr = tracks.trackList[i].uri.split(":");
+          for(var i = 0; i < trackList.length; i++){
+            var arr = trackList[i].uri.split(":");
             trackIds.push(arr[arr.length-1]);
           }
-  
-          tracksPlaceholder.innerHTML = tracksTemplate({
-            tracks: tracks.trackList,
-            trackIds: trackIds,
-          });
+          //console.log(trackIds);
+          // tracksPlaceholder.innerHTML = tracksTemplate({
+          //   tracks: tracks.trackList,
+          //   trackIds: trackIds,
+          // });
+
           // get string combining all track IDs
           var ids = "";
           for(var i = 0; i < trackIds.length-2; i++){
             ids += trackIds[i] + "%";
           }
           ids+=trackIds[trackIds.length-1];
-          // get track audio features
+
+          //get track audio features
           $.ajax({
             url: `https://api.spotify.com/v1/audio-features?ids=${trackIds}`,
             headers: {
               Authorization: "Bearer " + access_token,
             },
             success: function (response) {
-              audio = {
+            let audio = {
                 features: response.audio_features,
               };
+              musicInserts = giveMusicInserts(trackList, audio.features);
             }
           });
         },
       });
-      giveMusicInserts(tracks, audio.features);
 
       $.ajax({
           url: 'https://api.spotify.com/v1/me',
@@ -143,9 +133,7 @@
             Authorization: 'Bearer ' + access_token,
           },
           success: function(response) {
-
             userProfilePlaceholder.innerHTML = userProfileTemplate(response);
-            // console.log(giveUserInserts(response));
             userInserts = giveUserInserts(response);
             let btn = document.createElement("button");
             btn.innerHTML = "Click to login next user";
@@ -180,4 +168,5 @@
       });
     }, false);
   }
-})();
+}
+)();

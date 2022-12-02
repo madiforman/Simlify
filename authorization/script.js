@@ -12,11 +12,34 @@ var cors = require("cors");
 var querystring = require("querystring");
 var cookieParser = require("cookie-parser");
 var sqlite3 = require("sqlite3").verbose();
-var db = new sqlite3.Database("455app.db");
+const db = new sqlite3.Database("455app.db");
 
 var client_id = "a2bd214fd5d44b278a1625e0f5376057"; // Your client id
 var client_secret = "546e170d6d1042eeab670d4f84d233f8"; // Your secret
 var redirect_uri = "http://localhost:8888/callback"; // Your redirect uri
+
+/**
+ * Creates the music table
+ */
+// db.run(
+//   "CREATE TABLE Music (trackID, trackName, Acousticness, Danceability, Energy, Liveness, Valence, Speechiness, Tempo)"
+// );
+
+// db.run("CREATE TABLE Tracking (userID, trackID)");
+
+// db.run("CREATE TABLE Users (userID, Name)");
+//db.run("INSERT into Users (userID,Name) VALUES (2,'madi')");
+db.serialize(() => {
+  db.run("DROP TABLE Users");
+  db.run("CREATE TABLE Users (userID, Name)");
+  db.run("INSERT into Users (userID,Name) VALUES (2,'madi')");
+  db.run("INSERT into Users (userID,Name) VALUES (3,'seung')");
+  db.run("INSERT into Users (userID,Name) VALUES (4,'mitch')");
+
+  db.each("SELECT * FROM Users", (err, row) => {
+    console.log(row);
+  });
+});
 
 /**
  * Generates a random string containing numbers and letters

@@ -18,11 +18,21 @@ app.use(express.static(__dirname + '/public'));
 
 app.use(bodyParser.urlencoded({ extended: true }));
 
+
+var scope = ['user-read-private', 'user-read-email', 'user-top-read'],
+redirectUri = 'http://localhost:8888/callback',
+clientId = 'a2bd214fd5d44b278a1625e0f5376057',
+state = 'some-state-of-my-choice';
+
 // setting the spotify-api goes here:
 const spotifyApi = new SpotifyWebApi({
-  clientId: process.env.CLIENT_ID, // privadas con env
-  clientSecret: process.env.CLIENT_SECRET
+  clientId: clientId,
+  clientSecret: '546e170d6d1042eeab670d4f84d233f8',
+  redirect_uri: redirectUri
 });
+
+// create authorization url
+var authorizeURL = spotifyApi.createAuthorizeURL(scopes, state);
 
 // Retrieve an access token
 spotifyApi
@@ -84,7 +94,7 @@ app.get('/tracks/:id', (req, res, next) => {
 
 //app.listen(3000, () => console.log("My Spotify project running on port 3000 🎧 🥁 🎸 🔊"));
 
-var port = process.env.PORT || 8888;
+var port = process.env.PORT || 3000;
 
 app.listen(port, function () {
  console.log(`My Spotify project running!`);

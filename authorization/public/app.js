@@ -74,6 +74,8 @@
       oauthTemplate = Handlebars.compile(oauthSource),
       oauthPlaceholder = document.getElementById('oauth');
 
+  console.log(params);
+
   if (error) {
     alert('There was an error during the authentication');
   } else {

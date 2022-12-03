@@ -1,149 +1,101 @@
-/**
- * This is an example of a basic node.js script that performs
- * the Authorization Code oAuth2 flow to authenticate against
- * the Spotify Accounts.
- *
- * For more information, read
- * https://developer.spotify.com/web-api/authorization-guide/#authorization_code_flow
- */
-var express = require('express'); // Express web server framework
-var request = require('request'); // "Request" library
-var cors = require('cors');
-var querystring = require('querystring');
-var cookieParser = require('cookie-parser');
-var sqlite3 = require('sqlite3').verbose();
+require('dotenv').config()
 
-var client_id = 'a2bd214fd5d44b278a1625e0f5376057'; // Your client id
-var client_secret = '546e170d6d1042eeab670d4f84d233f8'; // Your secret
-var redirect_uri = 'http://localhost:8888/callback'; // Your redirect uri
+/*To avoid making our API keys public, we don't want to add and commit them. We'll use a package named dotenv for that. The .env is referred to in the .gitignore file so you're safe!*/
 
-/**
-* Generates a random string containing numbers and letters
-* @param  {number} length The length of the string
-* @return {string} The generated string
-*/
-var generateRandomString = function(length) {
-  var text = '';
-  var possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+const express = require('express');
+const hbs = require('hbs');
 
-  for (var i = 0; i < length; i++) {
-    text += possible.charAt(Math.floor(Math.random() * possible.length));
-  }
-  return text;
-};
+// require spotify-web-api-node package here:
+const SpotifyWebApi = require("spotify-web-api-node");
 
-var stateKey = 'spotify_auth_state';
+const bodyParser = require('body-parser');
 
-var app = express();
+const app = express();
 
-app.use(express.static(__dirname + '/public'))
-  .use(cors())
-  .use(cookieParser());
+app.set('view engine', 'hbs');
+app.set('views', __dirname + '/views');
+app.use(express.static(__dirname + '/public'));
 
-app.get('/login', function(req, res) {
+app.use(bodyParser.urlencoded({ extended: true }));
 
-  var state = generateRandomString(16);
-  res.cookie(stateKey, state);
-
-  // your application requests authorization
-  var scope = 'user-read-private user-read-email user-top-read';
-  res.redirect('https://accounts.spotify.com/authorize?' +
-    querystring.stringify({
-      response_type: 'code',
-      client_id: client_id,
-      scope: scope,
-      redirect_uri: redirect_uri,
-      state: state,
-      show_dialog: true,
-    }));
+// setting the spotify-api goes here:
+const spotifyApi = new SpotifyWebApi({
+  clientId: process.env.CLIENT_ID, // privadas con env
+  clientSecret: process.env.CLIENT_SECRET
 });
 
-app.get('/callback', function(req, res) {
-  // your application requests refresh and access tokens
-  // after checking the state parameter
-
-  var code = req.query.code || null;
-  var state = req.query.state || null;
-  var storedState = req.cookies ? req.cookies[stateKey] : null;
-
-  if (state === null || state !== storedState) {
-    res.redirect('/#' +
-      querystring.stringify({
-        error: 'state_mismatch'
-      }));
-  } else {
-    res.clearCookie(stateKey);
-    var authOptions = {
-      url: 'https://accounts.spotify.com/api/token',
-      form: {
-        code: code,
-        redirect_uri: redirect_uri,
-        grant_type: 'authorization_code'
-      },
-      headers: {
-        'Authorization': 'Basic ' + (new Buffer(client_id + ':' + client_secret).toString('base64'))
-      },
-      json: true
-    };
-
-    request.post(authOptions, function(error, response, body) {
-      if (!error && response.statusCode === 200) {
-        access_token = body.access_token;
-        var access_token = body.access_token,
-          refresh_token = body.refresh_token;
- 
-        //  var options = {
-        //    url: 'https://api.spotify.com/v1/me',
-        //    headers: { 'Authorization': 'Bearer ' + access_token },
-        //    json: true
-        //  };
- 
-        //  // use the access token to access the Spotify Web API
-        //  request.get(options, function(error, response, body) {
-        //    console.log(body);
-        //  });
- 
-         // we can also pass the token to the browser to make requests from there
-        res.redirect('/#' +
-          querystring.stringify({
-            access_token: access_token,
-            refresh_token: refresh_token
-          }));
-      } else {
-        //  res.redirect('/#' +
-        //    querystring.stringify({
-        //      error: 'invalid_token'
-        //    }));
-        res.send("There was an error during authentication.");
-      }
-    });
-  }
-});
- 
-app.get('/refresh_token', function(req, res) {
-
-  // requesting access token from refresh token
-  var refresh_token = req.query.refresh_token;
-  var authOptions = {
-    url: 'https://accounts.spotify.com/api/token',
-    headers: { 'Authorization': 'Basic ' + (new Buffer(client_id + ':' + client_secret).toString('base64')) },
-    form: {
-      grant_type: 'refresh_token',
-      refresh_token: refresh_token
-    },
-    json: true
-  };
-
-  request.post(authOptions, function(error, response, body) {
-    if (!error && response.statusCode === 200) {
-      var access_token = body.access_token;
-      res.send({
-        'access_token': access_token
-      });
-    }
+// Retrieve an access token
+spotifyApi
+  .clientCredentialsGrant()
+  .then(data => {
+    //console.log(data.body)
+    spotifyApi.setAccessToken(data.body["access_token"]);
+  })
+  .catch(error => {
+    console.log("Something went wrong when retrieving an access token", error);
   });
+
+
+// the routes go here:
+app.get('/', (req, res, next) => {
+  res.render('index')
+}) // localhost:3000
+
+
+app.get('/artists', (req, res, next) => {
+  //console.log('artist is', req.query.artist)
+  spotifyApi
+    .searchArtists(req.query.artist)
+    .then(data => {
+        //console.log("The received data from the API: ", data.body.artists.items);
+        res.render('artists',  {artists: data.body.artists.items, artist: req.query.artist});
+    })
+    .catch(err => {
+        console.log("The error while searching artists occurred: ", err);
+    })
 });
 
-console.log('Listening on 8888');
-app.listen(8888);
+app.get('/albums/:id', (req, res, next) => {
+  spotifyApi
+    .getArtistAlbums(req.params.id)
+    .then(
+      function(data) {
+        let artist = req.query.artist
+        //console.log('Artist albums', data.body.items);
+        res.render('albums', {albums: data.body.items, artist: artist})
+      },
+      function(err) {
+        console.error(err);
+      }
+    );
+})
 
+app.get('/tracks/:id', (req, res, next) => {
+  spotifyApi
+    .getAlbumTracks(req.params.id)
+    .then(function(data) {
+      //console.log('tracks', data.body.items);
+      res.render('tracks', {tracks: data.body.items, album: req.query.album, artist: req.query.artist})
+
+    }, function(err) {
+      console.log('Something went wrong!', err);
+    })
+})
+
+//app.listen(3000, () => console.log("My Spotify project running on port 3000 🎧 🥁 🎸 🔊"));
+
+var port = process.env.PORT || 8888;
+
+app.listen(port, function () {
+ console.log(`My Spotify project running!`);
+});
+
+// require sql.js in this file & make a get request to get information 
+// from 
+
+// keep one database and connect to that db file
+// use sqlite3 --> npm install
+// 
+
+// get database in our files (one from our school assignments)
+// run some queries off of this database

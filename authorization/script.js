@@ -160,6 +160,7 @@ app.get('/callback', function(req, res) {
                   db.each("SELECT * FROM Music", (err, row) => {
                     console.log(row);
                   });
+                  db.close();
                 });
               })
             });

@@ -146,4 +146,70 @@ app.get('/refresh_token', function(req, res) {
 
 console.log('Listening on 8888');
 app.listen(8888);
+/**NOTE : VECTORS CAN NOT CONTAIN ALL ZEROS OR WE WILL GET NaN. MUST CHECK BEFORE THAT THEYRE NOT ALL 0 */
+/**
+ * Function to find the magnitude of a vector
+ * @param {*} v vector
+ * @returns magnitude of v
+ */
+function vector_magnitude(v){
+  let sum = 0;
+    v.forEach(i =>{
+      sum += i * i;
+    })
+    return Math.sqrt(sum);
 
+}
+/**
+ * Function to find the dot product of two vectors
+ * @param {*} v0 first vector
+ * @param {*} v1 second vector
+ * @param {*} len length of both vectors (must be the same)
+ * @returns dot product of v0 . v1
+ */
+function dot_product(v0, v1, len){
+  let product = 0;
+  for(let i = 0; i < len; i++){
+    product += + v0[i] * v1[i];
+  }
+  return product;
+}
+/**
+ * I wanted a function that will round two the second decimal place in a precise manner
+ * @param {*} num num to round
+ * @returns rounded number
+ */
+function my_round(num){
+  return Math.round(( num  + Number.EPSILON) * 100) / 100;
+}
+/**
+ * Finds the cosine similarity of two vectors
+ * @param {*} v0 first vector 
+ * @param {*} v1 second vector
+ * @param {*} len len of both vectors
+ */
+function cosine_similarity(v0, v1, len){
+let num = dot_product(v0, v1, len);
+let denom = vector_magnitude(v0) * vector_magnitude(v1);
+return my_round(num/denom);
+}
+let vector0 = [[ 3, 2, 0, 5], [ 1, 7, 0, 5]];
+let vector1 = [[3, 1, 1, 4], [1, 6, 0, 5]];
+let v = [[0, 1, 0, 0], [1, 1, 1, 1]];
+/**
+ * Averages the cosine similarity of two lists of vectors
+ * @param {*} list0 first list of vectors 
+ * @param {*} list1 second list of vectors
+ * @param {*} size number of vectors given (i.e. vector0 defined above has 2 vectors)
+ * @param {*} elems number of elemnts per vector (i.e. vector0 has 4 elements in each vector)
+ * @returns 
+ */
+function average_cosine_sim(list0, list1, size, elems){
+  let cos = 0;
+  for(let i = 0; i < size; i++){
+    cos += cosine_similarity(list0[i], list1[i], elems);
+  }
+  return my_round(cos/size);
+}
+
+console.log(average_cosine_sim(v, vector1, 2, 4));

@@ -37,6 +37,7 @@ db.serialize(() => {
   db.run("INSERT into Users (userID,Name) VALUES (4,'mitch')");
 
   db.each("SELECT * FROM Users", (err, row) => {
+    // rows is an array and we can use that for the similarity
     console.log(row);
   });
 });

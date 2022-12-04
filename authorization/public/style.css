@@ -1,0 +1,58 @@
+h1{
+    text-align: center;
+    font-family: 'logo';
+    font-size: 10em;
+    margin-top: 200px;
+    animation: fadeInAnimation ease 3s;
+}
+h2{
+    text-align: center;
+    font-family: 'head';
+}
+body{
+    background-color: #E2D1F9;
+    font-family: 'head';
+    font-weight: 400;
+}
+#login-next-user{
+    margin-left: 220px;
+    background-color: #FCF6F5FF;
+    color: black;
+}
+.btn-container{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+}
+.btn-primary{
+    height: 50px;
+    width:310px;
+    font-size: 33px;
+    background-color: #FCF6F5FF;
+    color: black;
+    border-radius: 10px;
+    animation: fadeInAnimation ease 2s;
+}
+.btn-primary:hover{
+    background-color: #BB86C2;
+    color: black;
+}
+@font-face {
+    font-family: 'logo';
+    src: url('./zorque/zorque.otf') format(opentype);
+}
+@font-face {
+    font-family: 'head';
+    src: url('./quicksand/Quicksand_Bold_Oblique.otf') format(opentype);
+}
+@keyframes fadeInAnimation {
+    0%{
+        transform: translateY(-150px);
+        opacity: 0;
+    }
+    100%{
+        transform: translateY(0);
+        opacity: 1;
+    }
+}

@@ -10,6 +10,7 @@ const bodyParser = require("body-parser");
 var sqlite3 = require("sqlite3").verbose();
 const db = new sqlite3.Database("455app.db");
 const axios = require("axios");
+<<<<<<< HEAD
 var songArray = [];
 var temp = [];
 /**
@@ -20,10 +21,21 @@ var stateKey = "spotify_auth_state";
 app.set("view engine", "hbs");
 app.set("views", __dirname + "/views");
 app.use(express.static(__dirname + "/public"));
+=======
+
+var stateKey = 'spotify_auth_state';
+app.set('view engine', 'hbs');
+app.set('views', __dirname + '/views');
+app.use(express.static(__dirname + '/public'));
+>>>>>>> a34650e0419e55abf111a40c187e41fc2576d345
 app.use(cookieParser());
 app.use(cors());
 app.use(bodyParser.urlencoded({ extended: true }));
 
+var temp = [];
+var songs0 = [];
+var songs1 =[];
+var flag = 0;
 /**
  * Generates a random string containing numbers and letters
  * @param  {number} length The length of the string
@@ -146,6 +158,7 @@ app.get("/callback", function (req, res) {
                     Authorization: `${token_type} ${access_token}`,
                   },
                 }
+<<<<<<< HEAD
               )
               .then((response) => {
                 let trackList = response.data.items;
@@ -224,12 +237,63 @@ app.get("/callback", function (req, res) {
           .catch((error) => {
             res.send(error);
           });
+=======
+              })
+              .then(response => {
+                // INSERT INTO MUSIC SQL DB
+                let musicInserts = giveMusicInserts(trackList, response.data.audio_features);
+                let userSongInserts = getUserSongInserts(userInfo, trackIds);
+                db.serialize(() => {
+                  musicInserts.forEach(i => { //add data to tables
+                    db.run(i);
+                  });
+                  userSongInserts.forEach(i => {
+                    db.run(i);
+                  });
+                  let userID = userInfo.id;
+                  db.get("SELECT COUNT(userID) AS numUsers FROM Users", (err, row) => {
+                    if(row.numUsers == 2){
+                      console.log("here");
+                      flag = 1;
+                    }
+                      //UpS2023666
+                  });
+                  db.each("SELECT Acousticness, Danceability, Energy, Liveness, Valence, Speechiness, Tempo FROM userSongs NATURAL JOIN Music WHERE userID =" + "\"" + userID + "\"", (err, row) => {
+                    temp.push(row.Acousticness);
+                    temp.push(row.Danceability);
+                    temp.push(row.Energy);
+                    temp.push(row.Liveness);
+                    temp.push(row.Valence);
+                    temp.push(row.Speechiness);
+                    temp.push(row.Tempo);
+                    if(flag == 0){
+                      songs0.push(temp)
+                      console.log("here0");
+                    } else {
+                      songs1.push(temp);
+                      console.log("here1");
+                    //  flag = 1;
+                    }
+                    temp = [];
+                  });
+                  console.log(songs0);
+                  console.log(songs1);
+                });
+              })
+            });
+        })
+        .catch(error => {
+          res.send(error);
+          return;
+        });
+>>>>>>> a34650e0419e55abf111a40c187e41fc2576d345
       } else {
         res.send(response);
       }
     })
     .catch((error) => {
       res.send(error);
+      return;
     });
 });
 

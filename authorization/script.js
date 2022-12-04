@@ -1,16 +1,16 @@
-require('dotenv').config()
-
-/*To avoid making our API keys public, we don't want to add and commit them. We'll use a package named dotenv for that. The .env is referred to in the .gitignore file so you're safe!*/
+/**
+ * ALL REQUIRE STATEMENTS
+ */
 const express = require('express');
 const app = express();
-var request = require('request');
-const hbs = require('hbs');
 var cookieParser = require('cookie-parser');
 var querystring = require('querystring');
 var cors = require('cors');
 const bodyParser = require('body-parser');
-// require spotify-web-api-node package here:
-const SpotifyWebApi = require("spotify-web-api-node");
+// sqlite api
+var sqlite3 = require("sqlite3").verbose();
+const db = new sqlite3.Database("455app.db");
+const axios = require("axios");
 
 var stateKey = 'spotify_auth_state';
 
@@ -19,7 +19,6 @@ app.set('views', __dirname + '/views');
 app.use(express.static(__dirname + '/public'));
 app.use(cookieParser());
 app.use(cors());
-
 app.use(bodyParser.urlencoded({ extended: true }));
 
 /**
@@ -36,155 +35,177 @@ app.use(bodyParser.urlencoded({ extended: true }));
   }
   return text;
 };
-var state = generateRandomString(16);
 
-var scopes = ['user-read-private', 'user-read-email', 'user-top-read'],
-redirectUri = 'http://localhost:8888/callback',
+/**
+ * SPOTIFY AUTH VARIABLES
+ */
+var redirectUri = 'http://localhost:8888/callback',
 clientId = 'a2bd214fd5d44b278a1625e0f5376057',
-clientSecret = '546e170d6d1042eeab670d4f84d233f8',
-state = state;
+clientSecret = '546e170d6d1042eeab670d4f84d233f8';
 
-// setting the spotify-api goes here:
-const spotifyApi = new SpotifyWebApi({
-  clientId: clientId,
-  clientSecret: clientSecret,
-  redirectUri: redirectUri
-});
-
-// create authorization url
-var authorizeURL = spotifyApi.createAuthorizeURL(scopes, state);
-
-
+// LOGIN
 app.get('/login', function(req, res) {
- 
-  var state = generateRandomString(16);
+  const state = generateRandomString(16);
   res.cookie(stateKey, state);
 
-  // redirect to the authorization url
-  res.redirect(authorizeURL);
+  const scope = 'user-read-private user-read-email user-top-read';
+
+  const queryParams = querystring.stringify({
+    client_id: clientId,
+    response_type: 'code',
+    redirect_uri: redirectUri,
+    state: state,
+    scope: scope,
+    show_dialog: true,
+  });
+
+  res.redirect(`https://accounts.spotify.com/authorize?${queryParams}`);
 });
 
+/**
+ * CREATE TABLES
+ */
+db.serialize(() => {
+  db.run("DROP TABLE Music");
+  db.run("DROP TABLE Users");
+  db.run("CREATE TABLE Users (userID, Name)");
+  db.run("CREATE TABLE Music (songID,songName,Acousticness,Danceability,Energy,Liveness,Valence,Speechiness,Tempo)");
+});
+
+// GET AUTHORIZATION AND USER INFORMATION
 app.get('/callback', function(req, res) {
   // your application requests refresh and access tokens
   // after checking the state parameter
-
-  var code = req.query.code || null;
-  var state = req.query.state || null;
-  var storedState = req.cookies ? req.cookies[stateKey] : null;
-
-  spotifyApi.authorizationCodeGrant(code).then(
-    function(data) {
-      // Set the access token on the API object to use it in later calls
-      spotifyApi.setAccessToken(data.body['access_token']);
-      spotifyApi.setRefreshToken(data.body['refresh_token']);
+  const code = req.query.code || null;
+  axios({
+    method: 'POST',
+    url: 'https://accounts.spotify.com/api/token',
+    data: querystring.stringify({
+      grant_type: 'authorization_code',
+      code: code,
+      redirect_uri: redirectUri
+    }),
+    headers: {
+      'content-type': 'application/x-www-form-urlencoded',
+      'accept-encoding': 'application/x-www-form-urlencoded',
+      Authorization: `Basic ${new Buffer.from(`${clientId}:${clientSecret}`).toString('base64')}`,
     },
-    function(err) {
-      console.log('Something went wrong!', err);
-    }
-  );
-  // console.log(req.query);
-  // console.log(state);
-  // console.log(req.cookies);
-  // console.log(req.cookies[stateKey]);
-  // console.log(storedState);
-
-  if (state === null) {
-    res.redirect('/#' +
-      querystring.stringify({
-        error: 'state_mismatch',
-      }));
-  } else {
-    res.clearCookie(stateKey);
-    var authOptions = {
-      url: 'https://accounts.spotify.com/api/token',
-      form: {
-        code: code,
-        redirect_uri: redirectUri,
-        grant_type: 'authorization_code'
-      },
-      headers: {
-        'Authorization': 'Basic ' + (new Buffer(clientId + ':' + clientSecret).toString('base64'))
-      },
-      json: true
-    };
-
-    request.post(authOptions, function(error, response, body) {
-      if (!error && response.statusCode === 200) {
-        access_token = body.access_token;
-        var access_token = body.access_token,
-          refresh_token = body.refresh_token;
- 
-         // we can also pass the token to the browser to make requests from there
-        res.redirect('/#' +
+  })
+    .then(response => {
+      if (response.status === 200) {
+        const access_token = response.data.access_token;
+        const token_type = response.data.token_type;
+        const refresh_token = response.data.refresh_token;
+      // MAKING REQUEST FOR USER INFORMATION
+      axios.get('https://api.spotify.com/v1/me', {
+        headers: {
+          'content-type': 'application/x-www-form-urlencoded',
+          'accept-encoding': 'application/x-www-form-urlencoded',
+          Authorization: `${token_type} ${access_token}`
+        }
+      })
+        .then(response => {
+          // INSERT INTO USERS SQL SB
+          let userInserts = giveUserInserts(response.data);
+          console.log(userInserts);
+          db.serialize(() => {
+            for (let i = 0; i < userInserts.length; i++) {
+              db.run(userInserts[i]);
+            }
+            db.each("SELECT * FROM Users", (err, row) => {
+              console.log(row);
+            });
+          });
+          res.redirect('/#' +
           querystring.stringify({
             access_token: access_token,
             refresh_token: refresh_token
           }));
+          // MAKING REQUEST FOR TOP TRACKS
+          axios.get(`https://api.spotify.com/v1/me/top/tracks?time_range=short_term&limit=10&offset=0`, {
+            headers: {
+              'content-type': 'application/x-www-form-urlencoded',
+              'accept-encoding': 'application/x-www-form-urlencoded',
+              Authorization: `${token_type} ${access_token}`
+            }
+          })
+            .then(response => {
+              let trackList = response.data.items;
+              var trackIds = [];
+              for(var i = 0; i < response.data.limit; i++){
+                var arr = trackList[i].uri.split(":");
+                trackIds.push(arr[arr.length-1]);
+              }
+              // GETS STRING COMBINING ALL TRACKS
+              var ids = "";
+              for(var i = 0; i < trackIds.length-2; i++){
+                ids += trackIds[i] + "%";
+              }
+              ids+=trackIds[trackIds.length-1];
+              // MAKING REQUEST FOR TRACK AUDIO FEATURES
+              axios.get(`https://api.spotify.com/v1/audio-features?ids=${trackIds}`, {
+                headers: {
+                  'content-type': 'application/x-www-form-urlencoded',
+                  'accept-encoding': 'application/x-www-form-urlencoded',
+                  Authorization: `${token_type} ${access_token}`
+                }
+              })
+              .then(response => {
+                // INSERT INTO MUSIC SQL DB
+                let musicInserts = giveMusicInserts(trackList, response.data.audio_features);
+                db.serialize(() => {
+                  for(var i=0; i<musicInserts.length; i++){
+                    db.run(musicInserts[i]);
+                  }
+                  db.each("SELECT * FROM Music", (err, row) => {
+                    console.log(row);
+                  });
+                });
+              })
+            });
+        })
+        .catch(error => {
+          res.send(error);
+        });
       } else {
-        res.send("There was an error during authentication.");
+        res.send(response);
       }
+    })
+    .catch(error => {
+      res.send(error);
     });
-  }
-  
 });
 
-// app.get('/#' + querystring.stringify({
-//   access_token: spotifyApi.getAccessToken,
-//   refresh_token: spotifyApi.refreshAccessToken
-// }), function(req,res){
-//   console.log(hi);
-// });
-
-
-// // the routes go here:
-// app.get('/', (req, res, next) => {
-//   res.render('index')
-// })
-
-
-// app.get('/artists', (req, res, next) => {
-//   //console.log('artist is', req.query.artist)
-//   spotifyApi
-//     .searchArtists(req.query.artist)
-//     .then(data => {
-//         //console.log("The received data from the API: ", data.body.artists.items);
-//         res.render('artists',  {artists: data.body.artists.items, artist: req.query.artist});
-//     })
-//     .catch(err => {
-//         console.log("The error while searching artists occurred: ", err);
-//     })
-// });
-
-// app.get('/albums/:id', (req, res, next) => {
-//   spotifyApi
-//     .getArtistAlbums(req.params.id)
-//     .then(
-//       function(data) {
-//         let artist = req.query.artist
-//         //console.log('Artist albums', data.body.items);
-//         res.render('albums', {albums: data.body.items, artist: artist})
-//       },
-//       function(err) {
-//         console.error(err);
-//       }
-//     );
-// })
-
-// app.get('/tracks/:id', (req, res, next) => {
-//   spotifyApi
-//     .getAlbumTracks(req.params.id)
-//     .then(function(data) {
-//       //console.log('tracks', data.body.items);
-//       res.render('tracks', {tracks: data.body.items, album: req.query.album, artist: req.query.artist})
-
-//     }, function(err) {
-//       console.log('Something went wrong!', err);
-//     })
-// })
-
+// MAKES MUSIC INSERTS FOR SQL DB
+function giveMusicInserts(trackList, features){
+  var statements = [];
+  let i = 0;
+  features.forEach(index => {
+    let songName = trackList[i].name;
+    let songID = trackList[i].id;
+    let Acousticness = features[i].acousticness;
+    let Danceability = features[i].danceability;
+    let Energy = features[i].energy;
+    let Liveness = features[i].liveness;
+    let Valence = features[i].valence;
+    let Speechiness = features[i].speechiness;
+    let Tempo = features[i].tempo;
+    statements.push(`INSERT INTO Music (songID,songName,Acousticness,Danceability,Energy,Liveness,Valence,Speechiness,Tempo) VALUES ('${songID}', '${songName}', '${Acousticness}', '${Danceability}',  '${Energy}', '${Liveness}', '${Valence}', '${Speechiness}', '${Tempo}')`);
+    i++;
+  })
+  return statements;
+}
+// MAKES USER INSERTS FOR SQL DB
+function giveUserInserts(userInfo){
+  var statements = []
+  let userID = userInfo.id;
+  let userName = userInfo.display_name;
+  statements.push(`INSERT INTO Users (userID,Name) VALUES ('${userID}', '${userName}')`);
+  return statements;
+}
 
 var port = 8888;
 
 app.listen(port, function () {
- console.log(`My Spotify project running!`);
+ console.log(`Simlify is running!`);
 });

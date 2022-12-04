@@ -10,10 +10,6 @@ const bodyParser = require('body-parser');
 var sqlite3 = require("sqlite3").verbose();
 const db = new sqlite3.Database("455app.db");
 const axios = require("axios");
-/**
- * importing our functions
- */
-
 
 var stateKey = 'spotify_auth_state';
 app.set('view engine', 'hbs');
@@ -23,6 +19,10 @@ app.use(cookieParser());
 app.use(cors());
 app.use(bodyParser.urlencoded({ extended: true }));
 
+var temp = [];
+var songs0 = [];
+var songs1 =[];
+var flag = 0;
 /**
  * Generates a random string containing numbers and letters
  * @param  {number} length The length of the string
@@ -167,21 +167,40 @@ app.get('/callback', function(req, res) {
                     db.run(i);
                   });
                   let userID = userInfo.id;
-                  console.log(userID);
                   db.get("SELECT COUNT(userID) AS numUsers FROM Users", (err, row) => {
                     if(row.numUsers == 2){
-                      db.each("SELECT * FROM userSongs NATURAL JOIN Music WHERE userID = 'madiforman06'", (err, row) => {
-                        console.log(row);
-                      })
+                      console.log("here");
+                      flag = 1;
                     }
-
+                      //UpS2023666
                   });
+                  db.each("SELECT Acousticness, Danceability, Energy, Liveness, Valence, Speechiness, Tempo FROM userSongs NATURAL JOIN Music WHERE userID =" + "\"" + userID + "\"", (err, row) => {
+                    temp.push(row.Acousticness);
+                    temp.push(row.Danceability);
+                    temp.push(row.Energy);
+                    temp.push(row.Liveness);
+                    temp.push(row.Valence);
+                    temp.push(row.Speechiness);
+                    temp.push(row.Tempo);
+                    if(flag == 0){
+                      songs0.push(temp)
+                      console.log("here0");
+                    } else {
+                      songs1.push(temp);
+                      console.log("here1");
+                    //  flag = 1;
+                    }
+                    temp = [];
+                  });
+                  console.log(songs0);
+                  console.log(songs1);
                 });
               })
             });
         })
         .catch(error => {
           res.send(error);
+          return;
         });
       } else {
         res.send(response);
@@ -189,6 +208,7 @@ app.get('/callback', function(req, res) {
     })
     .catch(error => {
       res.send(error);
+      return;
     });
 });
 

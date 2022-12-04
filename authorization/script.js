@@ -68,8 +68,10 @@ app.get('/login', function(req, res) {
  * CREATE TABLES
  */
 db.serialize(() => {
-  db.run("DROP TABLE Music");
-  db.run("DROP TABLE Users");
+  db.run("DROP TABLE IF EXISTS Music");
+  db.run("DROP TABLE IF EXISTS Users");
+  db.run("DROP TABLE IF EXISTS userSongs");
+  db.run("CREATE TABLE userSongs(userID, songID)");
   db.run("CREATE TABLE Users (userID, Name)");
   db.run("CREATE TABLE Music (songID,songName,Acousticness,Danceability,Energy,Liveness,Valence,Speechiness,Tempo)");
 });
@@ -109,6 +111,7 @@ app.get('/callback', function(req, res) {
         .then(response => {
           // INSERT INTO USERS SQL SB
           let userInserts = giveUserInserts(response.data);
+          let userInfo = response.data;
           console.log(userInserts);
           db.serialize(() => {
             for (let i = 0; i < userInserts.length; i++) {
@@ -155,12 +158,23 @@ app.get('/callback', function(req, res) {
               .then(response => {
                 // INSERT INTO MUSIC SQL DB
                 let musicInserts = giveMusicInserts(trackList, response.data.audio_features);
+                let userSongInserts = getUserSongInserts(userInfo, trackIds);
                 db.serialize(() => {
-                  for(var i=0; i<musicInserts.length; i++){
-                    db.run(musicInserts[i]);
-                  }
-                  db.each("SELECT * FROM Music", (err, row) => {
-                    console.log(row);
+                  musicInserts.forEach(i => { //add data to tables
+                    db.run(i);
+                  });
+                  userSongInserts.forEach(i => {
+                    db.run(i);
+                  });
+                  let userID = userInfo.id;
+                  console.log(userID);
+                  db.get("SELECT COUNT(userID) AS numUsers FROM Users", (err, row) => {
+                    if(row.numUsers == 2){
+                      db.each("SELECT * FROM userSongs NATURAL JOIN Music WHERE userID = 'madiforman06'", (err, row) => {
+                        console.log(row);
+                      })
+                    }
+
                   });
                 });
               })
@@ -219,6 +233,21 @@ function giveUserInserts(userInfo){
   let userID = userInfo.id;
   let userName = userInfo.display_name;
   statements.push(`INSERT INTO Users (userID,Name) VALUES ('${userID}', '${userName}')`);
+  return statements;
+}
+/**
+ * 
+ * @param {*} userInfo 
+ * @param {*} trackIDs 
+ * @returns 
+ */
+function getUserSongInserts(userInfo, trackIDs){
+  let statements = [];
+  trackIDs.forEach(i =>{
+    let userID = userInfo.id;
+    let songID = i;
+  statements.push(`INSERT INTO userSongs (userID, songID) VALUES ('${userID}', '${songID}')`);
+  })
   return statements;
 }
 /** FUNCTIONS USED FOR MANIPULATING DATA TO FIND COS SIMILARITY */

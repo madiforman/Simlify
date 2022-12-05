@@ -194,57 +194,61 @@ app.get("/callback", function (req, res) {
                       });
                       let userID = userInfo.id;
                       console.log(userID);
-
+                      let flags = 0;
                       db.get(
                         "SELECT COUNT(userID) AS numUsers FROM Users",
                         (err, uNum) => {
-                          console.log("here");
                           if (uNum.numUsers == 2) {
-                            console.log("he2re");
-
-                            db.each("SELECT userID FROM Users", (err, user) => {
+                            db.serialize(() => {
                               db.each(
-                                "SELECT Acousticness, Danceability, Energy, Liveness, Valence, Speechiness, Tempo FROM userSongs NATURAL JOIN Music WHERE userID =" +
-                                  '"' +
-                                  user.userID +
-                                  '"',
-                                (err, row) => {
-                                  //console.log(song0.length);
+                                "SELECT userID FROM Users",
+                                (err, user) => {
+                                  db.each(
+                                    "SELECT Acousticness, Danceability, Energy, Liveness, Valence, Speechiness, Tempo FROM userSongs NATURAL JOIN Music WHERE userID =" +
+                                      '"' +
+                                      user.userID +
+                                      '"',
+                                    (err, row) => {
+                                      //console.log(song0.length);
 
-                                  if (song0.length < 10) {
-                                    temp.push(row.Acousticness);
-                                    temp.push(row.Danceability);
-                                    temp.push(row.Energy);
-                                    temp.push(row.Liveness);
-                                    temp.push(row.Valence);
-                                    temp.push(row.Speechiness);
-                                    temp.push(row.Tempo);
-                                    song0.push(temp);
-                                    temp = [];
-                                  } else {
-                                    temp.push(row.Acousticness);
-                                    temp.push(row.Danceability);
-                                    temp.push(row.Energy);
-                                    temp.push(row.Liveness);
-                                    temp.push(row.Valence);
-                                    temp.push(row.Speechiness);
-                                    temp.push(row.Tempo);
-                                    song1.push(temp);
-                                    temp = [];
+                                      if (song0.length < 10) {
+                                        temp.push(row.Acousticness);
+                                        temp.push(row.Danceability);
+                                        temp.push(row.Energy);
+                                        temp.push(row.Liveness);
+                                        temp.push(row.Valence);
+                                        temp.push(row.Speechiness);
+                                        temp.push(row.Tempo);
+                                        song0.push(temp);
+                                        temp = [];
+                                        // console.log(song0);
 
-                                    //console.log(row);
-                                  }
+                                        // console.log(song0);
+                                        // console.log("song 0");
+                                      } else {
+                                        temp.push(row.Acousticness);
+                                        temp.push(row.Danceability);
+                                        temp.push(row.Energy);
+                                        temp.push(row.Liveness);
+                                        temp.push(row.Valence);
+                                        temp.push(row.Speechiness);
+                                        temp.push(row.Tempo);
+                                        song1.push(temp);
+                                        temp = [];
+                                      }
+                                    }
+                                  );
                                 }
                               );
+                              console.log("here");
+                              setTimeout(() => {
+                                console.log(song0);
+                                // console.log(song1);
+                              }, "1000");
                             });
                           }
                         }
                       );
-                      console.log(song0.length + "song 0");
-                      console.log(song1.length + "song 1");
-
-                      console.log(song0);
-                      console.log(song1);
                     }); //end serialize
                   });
               });
@@ -260,7 +264,7 @@ app.get("/callback", function (req, res) {
       res.send(error);
     });
 });
-
+/// HEHRE THIS ASJLFNDLASKNFLKDSJBNF<DM KLSDJFN:SDLKNFS:DLGNSDKBGKBDFSDNFKSDNFKSLDBJFKSDBFKSDJFLSDJFBSDKHJFBDFHKDSJFSDKJF
 var port = 8888;
 app.listen(port, function () {
   console.log(`Simlify is running!`);

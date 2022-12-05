@@ -105,7 +105,6 @@
             tracks: data.trackList,
             artist: data.trackList
           });
-          drawCircles(cosineSim);
         },
       });
     }else{
@@ -186,27 +185,20 @@
 })();
 
 function drawCircles(simScore){	
-	var canvas = document.getElementById('myCanvas');
-	var context = canvas.getContext('2d');
+  // let contain = document.getElementsByClassName('dl-horizontal');
+  // let theCircles = document.createElement('div');
+  // theCircles.setAttribute('id', 'circles');
+  // contain.appendChild(theCircles);
+  if(simScore >= 0 && simScore < 0.3){
+    document.getElementById('circles::after').style.left = '190px';
+  }else if(simScore >= 0.3 && simScore < 0.5){
+    document.getElementById('circles::after').style.left = '150px';
+  }else if(simScore >= 0.5 && simScore < 0.7){
+    document.getElementById('circles::after').style.left = '100px';
+  }else if(simScore >= 0.7 && simScore < 0.9){
+    document.getElementById('circles::after').style.left = '60px';
+  }else if(simScore >= 0.9 && simScore < 1){
+    document.getElementById('circles::after').style.left = '40px';
+  }
 	//draws the circle based on similarity score
-	var centerX = (canvas.width / 2)-((1-simScore)*140);
-	var centerY = canvas.height / 2;
-	var radius = 140;
-
-	context.beginPath();
-	//sets the arc to the right location
-	context.arc(centerX, centerY, radius, 0, 2 * Math.PI, false);
-  // context.arc(100, 75, 50, 0, 2 * Math.PI, false);
-	
-	context.fillStyle = 'green';
-	context.fill();
-	context.lineWidth = 5;
-	context.strokeStyle = '#003300';
-	context.stroke();
-	
-	//moves the context to the accurate location
-	context.moveTo((canvas.width / 2) + ((1-simScore)*140), centerY);
-	context.fillStyle = 'red';
-	
-	context.stroke();
 }

@@ -7,11 +7,11 @@ h1{
 }
 h2{
     text-align: center;
-    font-family: 'head';
+    font-family: 'century-gothic';
 }
 body{
     background-color: #E2D1F9;
-    font-family: 'head';
+    font-family: 'century-gothic';
     font-weight: 400;
 }
 #login-next-user{
@@ -40,13 +40,58 @@ body{
 }
 .tracks-media{
     font-size: 20px;
-    color: #AA4A44;
+    color: #836886;
     display: flex;
     justify-content: center;
+    position: relative;
 }
 .table{
     display: flex;
     justify-content: center;
+}
+#circles{
+    width: 200px;
+    height: 200px;
+    background-color: #92A8D1;
+    border-radius: 50%;
+    position:relative;
+    opacity: 75%;
+    border-color: #3C598D;
+    border-style: solid;
+    border-width: 2px;
+    animation: fadeInAnimationCirc ease 2s;
+    left: -50px
+}
+#circles::after{
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 100px;
+    background-color: #F7CAC9;
+    width: 200px;
+    height:200px;
+    border-radius: 50%;
+    opacity: 75%;
+    border-color: #E65E5A;
+    border-style: solid;
+    border-width: 2px;
+    animation: fadeInAnimationCirc2 ease 2s;
+  }
+#cos{
+    z-index: 9;
+    position: absolute;
+    top:80px;
+    border-color: #836886;
+    border-style: solid;
+    border-width: 2px;
+    padding: 2px;
+    animation: fadeInAnimation ease 2s;
+}
+.tracks-container{
+    animation: fadeInAnimation ease 2s;
+}
+#contain-user{
+    animation: fadeInAnimation ease 1s;
 }
 @font-face {
     font-family: 'logo';
@@ -56,6 +101,10 @@ body{
     font-family: 'head';
     src: url('./quicksand/Quicksand_Bold_Oblique.otf') format(opentype);
 }
+@font-face {
+    font-family: 'century-gothic';
+    src: url('./century-gothic/CenturyGothic.ttf') format(truetype);
+}
 @keyframes fadeInAnimation {
     0%{
         transform: translateY(-150px);
@@ -63,6 +112,26 @@ body{
     }
     100%{
         transform: translateY(0);
+        opacity: 1;
+    }
+}
+@keyframes fadeInAnimationCirc {
+    0%{
+        transform: translateX(-100px);
+        opacity: 0;
+    }
+    100%{
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+@keyframes fadeInAnimationCirc2 {
+    0%{
+        transform: translateX(300px);
+        opacity: 0;
+    }
+    100%{
+        transform: translateX(0);
         opacity: 1;
     }
 }

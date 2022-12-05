@@ -28,24 +28,24 @@
       <div id="loggedin">
         <div id="user-profile1">
         </div>
-        <div id="user-profile2">
-        </div>
         <div id="tracks">
         </div>
       </div>
     </div>
 
     <script id="user-profile-template1" type="text/x-handlebars-template">
-      <h2>Hi {{display_name}}!</h2>
-      <div class="media">
-        <div class="pull-left">
-          <img class="media-object" width="150" src="{{images.0.url}}" />
-        </div>
-        <div class="media-body">
-          <dl class="dl-horizontal">
-            <dt>Name</dt><dd class="clearfix">{{display_name}}</dd>
-            <dt>Spotify URI</dt><dd><a href="{{external_urls.spotify}}">{{external_urls.spotify}}</a></dd>
-          </dl>
+      <div id="contain-user">
+        <h2>Hi {{display_name}}!</h2>
+        <div class="media">
+          <div class="pull-left">
+            <img class="media-object" width="150" src="{{images.0.url}}" />
+          </div>
+          <div class="media-body">
+            <dl class="dl-horizontal">
+              <dt>Name</dt><dd class="clearfix">{{display_name}}</dd>
+              <dt>Spotify URI</dt><dd><a href="{{external_urls.spotify}}">{{external_urls.spotify}}</a></dd>
+            </dl>
+          </div>
         </div>
       </div>
     </script>
@@ -53,11 +53,15 @@
     <script id="tracks-template" type="text/x-handlebars-template">
       <div class="tracks-media">
         <dl class="dl-horizontal">
-          <dt>Similarity Score</dt><dd id="cos">{{cosine}}</dd>
+          <div id="circles">
+          </div>
+          <div id="contain-cos">
+            <div id="cos">Similarity Score {{cosine}}</div>
+          </div>
         </dl>
       </div>
-      <h2>- Your Top Tracks -</h2>
-      <div class="tracksContainer">
+      <div class="tracks-container">
+        <h2>- Your Top Tracks -</h2>
         <table class="table">
           <thead>
           {{#each tracks}}

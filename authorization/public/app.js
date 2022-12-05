@@ -47,8 +47,8 @@
             btn.setAttribute("class", "btn btn-default");
             btn.setAttribute("id", "login-next-user");
             btn.addEventListener('click', function(){
-            $('#login').show();
-            $('#loggedin').hide();
+              $('#login').show();
+              $('#loggedin').hide();
             });
             $('#login').hide();
             $('#loggedin').show();

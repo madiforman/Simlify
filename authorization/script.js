@@ -191,8 +191,8 @@ app.get("/callback", function (req, res) {
                       let flags = 0;
                       db.get(
                         "SELECT COUNT(userID) AS numUsers FROM Users",
-                        (err, uNum) => {
-                          if (uNum.numUsers == 2) {
+                        (err, num) => {
+                          if (num.numUsers == 2) {
                             db.serialize(() => {
                               db.each(
                                 "SELECT userID FROM Users",
@@ -237,7 +237,7 @@ app.get("/callback", function (req, res) {
                                //avg_cosine_similarity(song0, song1, 10, 7);
                                 console.log(song0);
                                 console.log(song1);
-                               avg_cosine_similarity(song0, song1, 10, 6);
+                               console.log("cos similarity is: " + avg_cosine_similarity(song0, song1, 10, 6));
                               }, "1000");
                             });
                           }

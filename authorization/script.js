@@ -18,10 +18,10 @@ app.use(express.static(__dirname + '/public'));
 app.use(cookieParser());
 app.use(cors());
 app.use(bodyParser.urlencoded({ extended: true }));
-
+/** DUMMY DATA */
 var temp = [];
-var songs0 = [];
-var songs1 =[];
+var song0 = [];
+var song1 =[];
 var flag = 0;
 /**
  * Generates a random string containing numbers and letters
@@ -77,138 +77,185 @@ db.serialize(() => {
 });
 
 // GET AUTHORIZATION AND USER INFORMATION
-app.get('/callback', function(req, res) {
+app.get("/callback", function (req, res) {
   // your application requests refresh and access tokens
   // after checking the state parameter
   const code = req.query.code || null;
   axios({
-    method: 'POST',
-    url: 'https://accounts.spotify.com/api/token',
+    method: "POST",
+    url: "https://accounts.spotify.com/api/token",
     data: querystring.stringify({
-      grant_type: 'authorization_code',
+      grant_type: "authorization_code",
       code: code,
-      redirect_uri: redirectUri
+      redirect_uri: redirectUri,
     }),
     headers: {
-      'content-type': 'application/x-www-form-urlencoded',
-      'accept-encoding': 'application/x-www-form-urlencoded',
-      Authorization: `Basic ${new Buffer.from(`${clientId}:${clientSecret}`).toString('base64')}`,
+      "content-type": "application/x-www-form-urlencoded",
+      "accept-encoding": "application/x-www-form-urlencoded",
+      Authorization: `Basic ${new Buffer.from(
+        `${clientId}:${clientSecret}`
+      ).toString("base64")}`,
     },
   })
-    .then(response => {
+    .then((response) => {
       if (response.status === 200) {
         const access_token = response.data.access_token;
         const token_type = response.data.token_type;
         const refresh_token = response.data.refresh_token;
-      // MAKING REQUEST FOR USER INFORMATION
-      axios.get('https://api.spotify.com/v1/me', {
-        headers: {
-          'content-type': 'application/x-www-form-urlencoded',
-          'accept-encoding': 'application/x-www-form-urlencoded',
-          Authorization: `${token_type} ${access_token}`
-        }
-      })
-        .then(response => {
-          // INSERT INTO USERS SQL SB
-          let userInserts = giveUserInserts(response.data);
-          let userInfo = response.data;
-          console.log(userInserts);
-          db.serialize(() => {
-            for (let i = 0; i < userInserts.length; i++) {
-              db.run(userInserts[i]);
-            }
-            db.each("SELECT * FROM Users", (err, row) => {
-              console.log(row);
-            });
-          });
-          res.redirect('/#' +
-          querystring.stringify({
-            access_token: access_token,
-            refresh_token: refresh_token
-          }));
-          // MAKING REQUEST FOR TOP TRACKS
-          axios.get(`https://api.spotify.com/v1/me/top/tracks?time_range=short_term&limit=10&offset=0`, {
+        // MAKING REQUEST FOR USER INFORMATION
+        axios
+          .get("https://api.spotify.com/v1/me", {
             headers: {
-              'content-type': 'application/x-www-form-urlencoded',
-              'accept-encoding': 'application/x-www-form-urlencoded',
-              Authorization: `${token_type} ${access_token}`
-            }
+              "content-type": "application/x-www-form-urlencoded",
+              "accept-encoding": "application/x-www-form-urlencoded",
+              Authorization: `${token_type} ${access_token}`,
+            },
           })
-            .then(response => {
-              let trackList = response.data.items;
-              var trackIds = [];
-              for(var i = 0; i < response.data.limit; i++){
-                var arr = trackList[i].uri.split(":");
-                trackIds.push(arr[arr.length-1]);
+          .then((response) => {
+            // INSERT INTO USERS SQL SB
+            let userInserts = giveUserInserts(response.data);
+            let userInfo = response.data;
+            console.log(userInserts);
+            db.serialize(() => {
+              for (let i = 0; i < userInserts.length; i++) {
+                db.run(userInserts[i]);
               }
-              // GETS STRING COMBINING ALL TRACKS
-              var ids = "";
-              for(var i = 0; i < trackIds.length-2; i++){
-                ids += trackIds[i] + "%";
-              }
-              ids+=trackIds[trackIds.length-1];
-              // MAKING REQUEST FOR TRACK AUDIO FEATURES
-              axios.get(`https://api.spotify.com/v1/audio-features?ids=${trackIds}`, {
-                headers: {
-                  'content-type': 'application/x-www-form-urlencoded',
-                  'accept-encoding': 'application/x-www-form-urlencoded',
-                  Authorization: `${token_type} ${access_token}`
-                }
-              })
-              .then(response => {
-                // INSERT INTO MUSIC SQL DB
-                let musicInserts = giveMusicInserts(trackList, response.data.audio_features);
-                let userSongInserts = getUserSongInserts(userInfo, trackIds);
-                db.serialize(() => {
-                  musicInserts.forEach(i => { //add data to tables
-                    db.run(i);
-                  });
-                  userSongInserts.forEach(i => {
-                    db.run(i);
-                  });
-                  let userID = userInfo.id;
-                  db.get("SELECT COUNT(userID) AS numUsers FROM Users", (err, row) => {
-                    if(row.numUsers == 2){
-                      console.log("here");
-                      flag = 1;
-                    }
-                      //UpS2023666
-                  });
-                  db.each("SELECT Acousticness, Danceability, Energy, Liveness, Valence, Speechiness, Tempo FROM userSongs NATURAL JOIN Music WHERE userID =" + "\"" + userID + "\"", (err, row) => {
-                    temp.push(row.Acousticness);
-                    temp.push(row.Danceability);
-                    temp.push(row.Energy);
-                    temp.push(row.Liveness);
-                    temp.push(row.Valence);
-                    temp.push(row.Speechiness);
-                    temp.push(row.Tempo);
-                    if(flag == 0){
-                      songs0.push(temp)
-                      console.log("here0");
-                    } else {
-                      songs1.push(temp);
-                      console.log("here1");
-                    //  flag = 1;
-                    }
-                    temp = [];
-                  });
-                  console.log(songs0);
-                  console.log(songs1);
-                });
-              })
+              db.each("SELECT * FROM Users", (err, row) => {
+                console.log(row);
+              });
             });
-        })
-        .catch(error => {
-          res.send(error);
-          return;
-        });
+            res.redirect(
+              "/#" +
+                querystring.stringify({
+                  access_token: access_token,
+                  refresh_token: refresh_token,
+                })
+            );
+            // MAKING REQUEST FOR TOP TRACKS
+            axios
+              .get(
+                `https://api.spotify.com/v1/me/top/tracks?time_range=short_term&limit=10&offset=0`,
+                {
+                  headers: {
+                    "content-type": "application/x-www-form-urlencoded",
+                    "accept-encoding": "application/x-www-form-urlencoded",
+                    Authorization: `${token_type} ${access_token}`,
+                  },
+                }
+              )
+              .then((response) => {
+                let trackList = response.data.items;
+                var trackIds = [];
+                for (var i = 0; i < response.data.limit; i++) {
+                  var arr = trackList[i].uri.split(":");
+                  trackIds.push(arr[arr.length - 1]);
+                }
+                // GETS STRING COMBINING ALL TRACKS
+                var ids = "";
+                for (var i = 0; i < trackIds.length - 2; i++) {
+                  ids += trackIds[i] + "%";
+                }
+                ids += trackIds[trackIds.length - 1];
+                // MAKING REQUEST FOR TRACK AUDIO FEATURES
+                axios
+                  .get(
+                    `https://api.spotify.com/v1/audio-features?ids=${trackIds}`,
+                    {
+                      headers: {
+                        "content-type": "application/x-www-form-urlencoded",
+                        "accept-encoding": "application/x-www-form-urlencoded",
+                        Authorization: `${token_type} ${access_token}`,
+                      },
+                    }
+                  )
+                  .then((response) => {
+                    // INSERT INTO MUSIC SQL DB
+                    let musicInserts = giveMusicInserts(
+                      trackList,
+                      response.data.audio_features
+                    );
+                    let userSongInserts = getUserSongInserts(
+                      userInfo,
+                      trackIds
+                    );
+                    db.serialize(() => {
+                      musicInserts.forEach((i) => {
+                        //add data to tables
+                        db.run(i);
+                      });
+                      userSongInserts.forEach((i) => {
+                        db.run(i);
+                      });
+                      let userID = userInfo.id;
+                      console.log(userID);
+                      let flags = 0;
+                      db.get(
+                        "SELECT COUNT(userID) AS numUsers FROM Users",
+                        (err, uNum) => {
+                          if (uNum.numUsers == 2) {
+                            db.serialize(() => {
+                              db.each(
+                                "SELECT userID FROM Users",
+                                (err, user) => {
+                                  db.each(
+                                    "SELECT Acousticness, Danceability, Energy, Liveness, Valence, Speechiness FROM userSongs NATURAL JOIN Music WHERE userID =" +
+                                      '"' +
+                                      user.userID +
+                                      '"',
+                                    (err, row) => {
+                                      //console.log(song0.length);
+
+                                      if (song0.length < 10) {
+                                        temp.push(parseFloat(row.Acousticness));
+                                        temp.push(parseFloat(row.Danceability));
+                                        temp.push(parseFloat(row.Energy));
+                                        temp.push(parseFloat(row.Liveness));
+                                        temp.push(parseFloat(row.Valence));
+                                        temp.push(parseFloat(row.Speechiness));
+                                        song0.push(temp);
+                                        temp = [];
+                                        // console.log(song0);
+
+                                        // console.log(song0);
+                                        // console.log("song 0");
+                                      } else {
+                                        temp.push(parseFloat(row.Acousticness));
+                                        temp.push(parseFloat(row.Danceability));
+                                        temp.push(parseFloat(row.Energy));
+                                        temp.push(parseFloat(row.Liveness));
+                                        temp.push(parseFloat(row.Valence));
+                                        temp.push(parseFloat(row.Speechiness));
+                                        song1.push(temp);
+                                        temp = [];
+                                      }
+                                    }
+                                  );
+                                }
+                              );
+                              console.log("here");
+                              setTimeout(() => {
+                               //avg_cosine_similarity(song0, song1, 10, 7);
+                                console.log(song0);
+                                console.log(song1);
+                               avg_cosine_similarity(song0, song1, 10, 6);
+                              }, "1000");
+                            });
+                          }
+                        }
+                      );
+                    }); //end serialize
+                  });
+              });
+          })
+          .catch((error) => {
+            res.send(error);
+          });
       } else {
         res.send(response);
       }
     })
-    .catch(error => {
+    .catch((error) => {
       res.send(error);
-      return;
     });
 });
 
@@ -316,10 +363,11 @@ function my_round(num){
 function cosine_similarity(v0, v1, len){
   let num = dot_product(v0, v1, len);
   let denom = vector_magnitude(v0) * vector_magnitude(v1);
+
     if(denom == 0){
       return "Divison by 0 error";
     }
-  return my_round(num/denom);
+  return num/denom;
 }
 // let vector0 = [[ 3, 2, 0, 5], [ 1, 7, 0, 5]];
 // let vector1 = [[3, 1, 1, 4], [1, 6, 0, 5]];
@@ -335,9 +383,11 @@ function cosine_similarity(v0, v1, len){
 function avg_cosine_similarity(list0, list1, size, elems){
   let cos = 0;
   for(let i = 0; i < size; i++){
-    cos += cosine_similarity(list0[i], list1[i], elems);
+  cos += (cosine_similarity(list0[i], list1[i], elems));
   }
   return my_round(cos/size);
 }
 
 // console.log(avg_cosine_similarity(v, vector1, 2, 4));
+
+//UpS2023666

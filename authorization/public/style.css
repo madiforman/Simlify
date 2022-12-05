@@ -38,6 +38,16 @@ body{
     background-color: #BB86C2;
     color: black;
 }
+.tracks-media{
+    font-size: 20px;
+    color: #AA4A44;
+    display: flex;
+    justify-content: center;
+}
+.table{
+    display: flex;
+    justify-content: center;
+}
 @font-face {
     font-family: 'logo';
     src: url('./zorque/zorque.otf') format(opentype);

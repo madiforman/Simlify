@@ -26,14 +26,16 @@
         </div>
       </div>
       <div id="loggedin">
-        <div id="user-profile">
+        <div id="user-profile1">
+        </div>
+        <div id="user-profile2">
         </div>
         <div id="tracks">
         </div>
       </div>
     </div>
 
-    <script id="user-profile-template" type="text/x-handlebars-template">
+    <script id="user-profile-template1" type="text/x-handlebars-template">
       <h2>Hi {{display_name}}!</h2>
       <div class="media">
         <div class="pull-left">
@@ -49,7 +51,12 @@
     </script>
 
     <script id="tracks-template" type="text/x-handlebars-template">
-      <h2>List of Tracks</h2>
+      <div class="tracks-media">
+        <dl class="dl-horizontal">
+          <dt>Similarity Score</dt><dd id="cos">{{cosine}}</dd>
+        </dl>
+      </div>
+      <h2>- Your Top Tracks -</h2>
       <div class="tracksContainer">
         <table class="table">
           <thead>

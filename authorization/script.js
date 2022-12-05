@@ -10,6 +10,7 @@ const bodyParser = require('body-parser');
 var sqlite3 = require("sqlite3").verbose();
 const db = new sqlite3.Database("455app.db");
 const axios = require("axios");
+const { request } = require('http');
 
 var stateKey = 'spotify_auth_state';
 app.set('view engine', 'hbs');
@@ -203,8 +204,6 @@ app.get("/callback", function (req, res) {
                                       user.userID +
                                       '"',
                                     (err, row) => {
-                                      //console.log(song0.length);
-
                                       if (song0.length < 10) {
                                         temp.push(parseFloat(row.Acousticness));
                                         temp.push(parseFloat(row.Danceability));
@@ -214,10 +213,6 @@ app.get("/callback", function (req, res) {
                                         temp.push(parseFloat(row.Speechiness));
                                         song0.push(temp);
                                         temp = [];
-                                        // console.log(song0);
-
-                                        // console.log(song0);
-                                        // console.log("song 0");
                                       } else {
                                         temp.push(parseFloat(row.Acousticness));
                                         temp.push(parseFloat(row.Danceability));
@@ -234,7 +229,6 @@ app.get("/callback", function (req, res) {
                               );
                               console.log("here");
                               setTimeout(() => {
-                               //avg_cosine_similarity(song0, song1, 10, 7);
                                 console.log(song0);
                                 console.log(song1);
                                console.log("cos similarity is: " + avg_cosine_similarity(song0, song1, 10, 6));
@@ -387,7 +381,3 @@ function avg_cosine_similarity(list0, list1, size, elems){
   }
   return my_round(cos/size);
 }
-
-// console.log(avg_cosine_similarity(v, vector1, 2, 4));
-
-//UpS2023666

@@ -12,8 +12,8 @@ const db = new sqlite3.Database("455app.db");
 const axios = require("axios");
 var song0 = [];
 var song1 = [];
-
 var temp = [];
+
 /**
  * importing our functions
  */
@@ -198,57 +198,56 @@ app.get("/callback", function (req, res) {
                       db.get(
                         "SELECT COUNT(userID) AS numUsers FROM Users",
                         (err, uNum) => {
+                          var userA = [];
                           if (uNum.numUsers == 2) {
-                            db.serialize(() => {
+                            db.each("SELECT userID FROM Users", (err, user) => {
+                              userA.push(user.userID);
+                            });
+                            userA.forEach((i) => {
                               db.each(
-                                "SELECT userID FROM Users",
-                                (err, user) => {
-                                  db.each(
-                                    "SELECT Acousticness, Danceability, Energy, Liveness, Valence, Speechiness, Tempo FROM userSongs NATURAL JOIN Music WHERE userID =" +
-                                      '"' +
-                                      user.userID +
-                                      '"',
-                                    (err, row) => {
-                                      //console.log(song0.length);
+                                "SELECT Acousticness, Danceability, Energy, Liveness, Valence, Speechiness, Tempo FROM userSongs NATURAL JOIN Music WHERE userID =" +
+                                  '"' +
+                                  i +
+                                  '"',
+                                (err, row) => {
+                                  //console.log(song0.length);
 
-                                      if (song0.length < 10) {
-                                        temp.push(row.Acousticness);
-                                        temp.push(row.Danceability);
-                                        temp.push(row.Energy);
-                                        temp.push(row.Liveness);
-                                        temp.push(row.Valence);
-                                        temp.push(row.Speechiness);
-                                        temp.push(row.Tempo);
-                                        song0.push(temp);
-                                        temp = [];
-                                        // console.log(song0);
+                                  if (song0.length < 10) {
+                                    temp.push(row.Acousticness);
+                                    temp.push(row.Danceability);
+                                    temp.push(row.Energy);
+                                    temp.push(row.Liveness);
+                                    temp.push(row.Valence);
+                                    temp.push(row.Speechiness);
+                                    temp.push(row.Tempo);
+                                    song0.push(temp);
+                                    temp = [];
+                                    // console.log(song0);
 
-                                        // console.log(song0);
-                                        // console.log("song 0");
-                                      } else {
-                                        temp.push(row.Acousticness);
-                                        temp.push(row.Danceability);
-                                        temp.push(row.Energy);
-                                        temp.push(row.Liveness);
-                                        temp.push(row.Valence);
-                                        temp.push(row.Speechiness);
-                                        temp.push(row.Tempo);
-                                        song1.push(temp);
-                                        temp = [];
-                                      }
-                                    }
-                                  );
+                                    // console.log(song0);
+                                    console.log("song 0" + i);
+                                  } else {
+                                    temp.push(row.Acousticness);
+                                    temp.push(row.Danceability);
+                                    temp.push(row.Energy);
+                                    temp.push(row.Liveness);
+                                    temp.push(row.Valence);
+                                    temp.push(row.Speechiness);
+                                    temp.push(row.Tempo);
+                                    song1.push(temp);
+                                    temp = [];
+                                  }
                                 }
                               );
-                              console.log("here");
-                              setTimeout(() => {
-                                console.log(song0);
-                                // console.log(song1);
-                              }, "1000");
-                            });
-                          }
+                            }); //foreach
+                          } //if 2 users
                         }
-                      );
+                      ); //count
+                      console.log("here");
+                      setTimeout(() => {
+                        console.log(song0);
+                        // console.log(song1);
+                      }, "5000");
                     }); //end serialize
                   });
               });

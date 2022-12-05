@@ -1,20 +1,25 @@
-function drawCircles(){	
+function drawCircles(simScore){	
 	var canvas = document.getElementById('myCanvas');
 	var context = canvas.getContext('2d');
-	var centerX = (canvas.width / 2)-(simScore*140);
+	//draws the circle based on similarity score
+	var centerX = (canvas.width / 2)-((1-simScore)*140);
 	var centerY = canvas.height / 2;
 	var radius = 140;
 
 	context.beginPath();
+	//sets the arc to the right location
 	context.arc(centerX, centerY, radius, 0, 2 * Math.PI, false);
+	
 	context.fillStyle = 'green';
 	context.fill();
 	context.lineWidth = 5;
 	context.strokeStyle = '#003300';
 	context.stroke();
 	
-	context.moveTo((canvas.width / 2) + (simScore*140), centerY;
+	//moves the context to the accurate location
+	context.moveTo((canvas.width / 2) + ((1-simScore)*140), centerY;
 	context.fillStyle = 'red';
+	
 	context.stroke();
 }
 

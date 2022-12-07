@@ -205,14 +205,14 @@ app.get("/callback", function (req, res) {
                                       user.userID +
                                       '"',
                                     (err, row) => {
-                                      if (song0.length < 10) {
+                                      if (songs0.length < 10) {
                                         temp.push(parseFloat(row.Acousticness));
                                         temp.push(parseFloat(row.Danceability));
                                         temp.push(parseFloat(row.Energy));
                                         temp.push(parseFloat(row.Liveness));
                                         temp.push(parseFloat(row.Valence));
                                         temp.push(parseFloat(row.Speechiness));
-                                        song0.push(temp);
+                                        songs0.push(temp);
                                         temp = [];
                                       } else {
                                         temp.push(parseFloat(row.Acousticness));
@@ -221,7 +221,7 @@ app.get("/callback", function (req, res) {
                                         temp.push(parseFloat(row.Liveness));
                                         temp.push(parseFloat(row.Valence));
                                         temp.push(parseFloat(row.Speechiness));
-                                        song1.push(temp);
+                                        songs1.push(temp);
                                         temp = [];
                                       }
                                     }
@@ -230,11 +230,11 @@ app.get("/callback", function (req, res) {
                               );
                               console.log("here");
                               setTimeout(() => {
-                                console.log(song0);
-                                console.log(song1);
+                                console.log(songs0);
+                                console.log(songs1);
                                 console.log(
                                   "cos similarity is: " +
-                                    avg_cosine_similarity(song0, song1, 10, 6)
+                                    avg_cosine_similarity(songs0, songs1, 10, 6)
                                 );
                               }, "1000");
                             });

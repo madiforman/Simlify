@@ -1,11 +1,15 @@
-<!doctype html>
+<!DOCTYPE html>
 <html>
   <head>
     <title>SIMLIFY</title>
-    <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css">
+    <link
+      rel="stylesheet"
+      href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css"
+    />
     <link href="style.css" rel="stylesheet" />
     <style type="text/css">
-      #login, #loggedin {
+      #login,
+      #loggedin {
         display: none;
       }
       .text-overflow {
@@ -26,10 +30,8 @@
         </div>
       </div>
       <div id="loggedin">
-        <div id="user-profile1">
-        </div>
-        <div id="tracks">
-        </div>
+        <div id="user-profile1"></div>
+        <div id="tracks"></div>
       </div>
     </div>
 
@@ -43,7 +45,9 @@
           <div class="media-body">
             <dl class="dl-horizontal">
               <dt>Name</dt><dd class="clearfix">{{display_name}}</dd>
-              <dt>Spotify URI</dt><dd><a href="{{external_urls.spotify}}">{{external_urls.spotify}}</a></dd>
+              <dt>Spotify URI</dt><dd><a
+                  href="{{external_urls.spotify}}"
+                >{{external_urls.spotify}}</a></dd>
             </dl>
           </div>
         </div>
@@ -69,14 +73,24 @@
               <td class="name">
                 {{this.name}}
                 {{#each this.artists}}
-									<span>
-										{{this.name}}
-									</span>
-								{{/each}}
+      			<span>
+      				{{this.name}}
+      			</span>
+      		{{/each}}
             <tr>
           {{/each}}
         </table>
     </script>
+
+    <div id="container"></div>
+    <br />
+    <div>
+      <div class="title pointerCursor">
+        What time period would you like to use?<i class="fa fa-angle-right"></i>
+      </div>
+
+      <select id="time"></select>
+    </div>
 
     <script src="//cdnjs.cloudflare.com/ajax/libs/handlebars.js/2.0.0-alpha.1/handlebars.min.js"></script>
     <script src="http://code.jquery.com/jquery-1.10.1.min.js"></script>

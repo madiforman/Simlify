@@ -10,13 +10,7 @@ const bodyParser = require("body-parser");
 var sqlite3 = require("sqlite3").verbose();
 const db = new sqlite3.Database("455app.db");
 const axios = require("axios");
-var song0 = [];
-var song1 = [];
-var temp = [];
-
-/**
- * importing our functions
- */
+const { request } = require("http");
 
 var stateKey = "spotify_auth_state";
 app.set("view engine", "hbs");
@@ -199,34 +193,51 @@ app.get("/callback", function (req, res) {
                       let userID = userInfo.id;
                       db.get(
                         "SELECT COUNT(userID) AS numUsers FROM Users",
-                        (err, row) => {
-                          if (row.numUsers == 2) {
-                            console.log("here");
-                            flag = 1;
-                          }
-                          //UpS2023666
-                        }
-                      );
-                      db.each(
-                        "SELECT Acousticness, Danceability, Energy, Liveness, Valence, Speechiness, Tempo FROM userSongs NATURAL JOIN Music WHERE userID =" +
-                          '"' +
-                          userID +
-                          '"',
-                        (err, row) => {
-                          temp.push(row.Acousticness);
-                          temp.push(row.Danceability);
-                          temp.push(row.Energy);
-                          temp.push(row.Liveness);
-                          temp.push(row.Valence);
-                          temp.push(row.Speechiness);
-                          temp.push(row.Tempo);
-                          if (flag == 0) {
-                            songs0.push(temp);
-                            console.log("here0");
-                          } else {
-                            songs1.push(temp);
-                            console.log("here1");
-                            //  flag = 1;
+                        (err, num) => {
+                          if (num.numUsers == 2) {
+                            db.serialize(() => {
+                              db.each(
+                                "SELECT userID FROM Users",
+                                (err, user) => {
+                                  db.each(
+                                    "SELECT Acousticness, Danceability, Energy, Liveness, Valence, Speechiness FROM userSongs NATURAL JOIN Music WHERE userID =" +
+                                      '"' +
+                                      user.userID +
+                                      '"',
+                                    (err, row) => {
+                                      if (song0.length < 10) {
+                                        temp.push(parseFloat(row.Acousticness));
+                                        temp.push(parseFloat(row.Danceability));
+                                        temp.push(parseFloat(row.Energy));
+                                        temp.push(parseFloat(row.Liveness));
+                                        temp.push(parseFloat(row.Valence));
+                                        temp.push(parseFloat(row.Speechiness));
+                                        song0.push(temp);
+                                        temp = [];
+                                      } else {
+                                        temp.push(parseFloat(row.Acousticness));
+                                        temp.push(parseFloat(row.Danceability));
+                                        temp.push(parseFloat(row.Energy));
+                                        temp.push(parseFloat(row.Liveness));
+                                        temp.push(parseFloat(row.Valence));
+                                        temp.push(parseFloat(row.Speechiness));
+                                        song1.push(temp);
+                                        temp = [];
+                                      }
+                                    }
+                                  );
+                                }
+                              );
+                              console.log("here");
+                              setTimeout(() => {
+                                console.log(song0);
+                                console.log(song1);
+                                console.log(
+                                  "cos similarity is: " +
+                                    avg_cosine_similarity(song0, song1, 10, 6)
+                                );
+                              }, "1000");
+                            });
                           }
                           temp = [];
                         }
@@ -382,5 +393,3 @@ function avg_cosine_similarity(list0, list1, size, elems) {
   }
   return my_round(cos / size);
 }
-
-// console.log(avg_cosine_similarity(v, vector1, 2, 4));

@@ -26,6 +26,10 @@ app.use(cookieParser());
 app.use(cors());
 app.use(bodyParser.urlencoded({ extended: true }));
 
+var temp = [];
+var songs0 = [];
+var songs1 = [];
+var flag = 0;
 /**
  * Generates a random string containing numbers and letters
  * @param  {number} length The length of the string
@@ -193,67 +197,49 @@ app.get("/callback", function (req, res) {
                         db.run(i);
                       });
                       let userID = userInfo.id;
-                      console.log(userID);
-                      let flags = 0;
                       db.get(
                         "SELECT COUNT(userID) AS numUsers FROM Users",
-                        (err, uNum) => {
-                          var userA = [];
-                          if (uNum.numUsers == 2) {
-                            db.each("SELECT userID FROM Users", (err, user) => {
-                              userA.push(user.userID);
-                            });
-                            userA.forEach((i) => {
-                              db.each(
-                                "SELECT Acousticness, Danceability, Energy, Liveness, Valence, Speechiness, Tempo FROM userSongs NATURAL JOIN Music WHERE userID =" +
-                                  '"' +
-                                  i +
-                                  '"',
-                                (err, row) => {
-                                  //console.log(song0.length);
-
-                                  if (song0.length < 10) {
-                                    temp.push(row.Acousticness);
-                                    temp.push(row.Danceability);
-                                    temp.push(row.Energy);
-                                    temp.push(row.Liveness);
-                                    temp.push(row.Valence);
-                                    temp.push(row.Speechiness);
-                                    temp.push(row.Tempo);
-                                    song0.push(temp);
-                                    temp = [];
-                                    // console.log(song0);
-
-                                    // console.log(song0);
-                                    console.log("song 0" + i);
-                                  } else {
-                                    temp.push(row.Acousticness);
-                                    temp.push(row.Danceability);
-                                    temp.push(row.Energy);
-                                    temp.push(row.Liveness);
-                                    temp.push(row.Valence);
-                                    temp.push(row.Speechiness);
-                                    temp.push(row.Tempo);
-                                    song1.push(temp);
-                                    temp = [];
-                                  }
-                                }
-                              );
-                            }); //foreach
-                          } //if 2 users
+                        (err, row) => {
+                          if (row.numUsers == 2) {
+                            console.log("here");
+                            flag = 1;
+                          }
+                          //UpS2023666
                         }
-                      ); //count
-                      console.log("here");
-                      setTimeout(() => {
-                        console.log(song0);
-                        // console.log(song1);
-                      }, "5000");
-                    }); //end serialize
+                      );
+                      db.each(
+                        "SELECT Acousticness, Danceability, Energy, Liveness, Valence, Speechiness, Tempo FROM userSongs NATURAL JOIN Music WHERE userID =" +
+                          '"' +
+                          userID +
+                          '"',
+                        (err, row) => {
+                          temp.push(row.Acousticness);
+                          temp.push(row.Danceability);
+                          temp.push(row.Energy);
+                          temp.push(row.Liveness);
+                          temp.push(row.Valence);
+                          temp.push(row.Speechiness);
+                          temp.push(row.Tempo);
+                          if (flag == 0) {
+                            songs0.push(temp);
+                            console.log("here0");
+                          } else {
+                            songs1.push(temp);
+                            console.log("here1");
+                            //  flag = 1;
+                          }
+                          temp = [];
+                        }
+                      );
+                      console.log(songs0);
+                      console.log(songs1);
+                    });
                   });
               });
           })
           .catch((error) => {
             res.send(error);
+            return;
           });
       } else {
         res.send(response);
@@ -261,6 +247,7 @@ app.get("/callback", function (req, res) {
     })
     .catch((error) => {
       res.send(error);
+      return;
     });
 });
 /// HEHRE THIS ASJLFNDLASKNFLKDSJBNF<DM KLSDJFN:SDLKNFS:DLGNSDKBGKBDFSDNFKSDNFKSLDBJFKSDBFKSDJFLSDJFBSDKHJFBDFHKDSJFSDKJF

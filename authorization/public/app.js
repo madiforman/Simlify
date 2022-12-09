@@ -1,4 +1,4 @@
-var timePeriod = "short_term";
+var timePeriod = "long_term";
 
 const values = {
   "4 Weeks": "short_term",
@@ -8,20 +8,17 @@ const values = {
 
 var timeMenu = document.getElementById("time");
 
-for (let val in values) {
-  var option = document.createElement("option");
-  option.setAttribute("value", values[val]);
-
-  let optionText = document.createTextNode(val);
-  option.appendChild(optionText);
-  timeMenu.appendChild(option);
+async function timeGetter(time) {
+  try {
+    let url = `https://api.spotify.com/v1/me/top/tracks?time_range=${time}&limit=10&offset=0`;
+    return url;
+  } catch (err) {
+    console.log(err);
+    return;
+  }
 }
-timeMenu.addEventListener("change", (e) => {
-  timePeriod = e.target.value;
-  console.log(e.target.value);
-});
 
-(function () {
+(async function () {
   var song0 = [
     [0.211, 0.756, 0.554, 0.274, 0.563, 0.145],
     [0.134, 0.595, 0.604, 0.11, 0.632, 0.0235],
@@ -60,6 +57,19 @@ timeMenu.addEventListener("change", (e) => {
     }
     return hashParams;
   }
+
+  for (let val in values) {
+    var option = document.createElement("option");
+    option.setAttribute("value", values[val]);
+
+    let optionText = document.createTextNode(val);
+    option.appendChild(optionText);
+    timeMenu.appendChild(option);
+  }
+  timeMenu.addEventListener("change", (e) => {
+    timePeriod = e.target.value;
+    console.log(e.target.value);
+  });
 
   var params = getHashParams();
 
@@ -103,8 +113,10 @@ timeMenu.addEventListener("change", (e) => {
           $("#loggedin").show();
         },
       });
+
       $.ajax({
-        url: `https://api.spotify.com/v1/me/top/tracks?time_range=${timePeriod}&limit=10&offset=0`,
+        url: await timeGetter(document.getElementById("time").value),
+        //`https://api.spotify.com/v1/me/top/tracks?time_range=${timePeriod}&limit=10&offset=0`,
         headers: {
           Authorization: "Bearer " + access_token,
         },
@@ -123,9 +135,8 @@ timeMenu.addEventListener("change", (e) => {
               }
             }
           }
-          var cosineSim = avg_cosine_similarity(song0, song1, 10, 6);
           tracksPlaceholder.innerHTML = tracksTemplate({
-            cosine: cosineSim,
+            cosine: params.score,
             tracks: data.trackList,
             artist: data.trackList,
           });

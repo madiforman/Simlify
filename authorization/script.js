@@ -11,18 +11,20 @@ var sqlite3 = require("sqlite3").verbose();
 const db = new sqlite3.Database("455app.db");
 const axios = require("axios");
 const { request } = require("http");
+const { application } = require("express");
 
 var stateKey = "spotify_auth_state";
-app.set("view engine", "hbs");
+app.set("view engine", "ejs");
 app.set("views", __dirname + "/views");
 app.use(express.static(__dirname + "/public"));
 app.use(cookieParser());
 app.use(cors());
 app.use(bodyParser.urlencoded({ extended: true }));
-
+app.use(cors());
+/** DUMMY DATA */
 var temp = [];
-var songs0 = [];
-var songs1 = [];
+var song0 = [];
+var song1 = [];
 var flag = 0;
 /**
  * Generates a random string containing numbers and letters
@@ -76,7 +78,7 @@ db.serialize(() => {
   db.run("CREATE TABLE userSongs(userID, songID)");
   db.run("CREATE TABLE Users (userID, Name)");
   db.run(
-    "CREATE TABLE Music (songID,songName,Acousticness,Danceability,Energy,Liveness,Valence,Speechiness,Tempo)"
+    "CREATE TABLE Music (songID UNIQUE,songName,Acousticness,Danceability,Energy,Liveness,Valence,Speechiness,Tempo)"
   );
 });
 
@@ -128,13 +130,6 @@ app.get("/callback", function (req, res) {
                 console.log(row);
               });
             });
-            res.redirect(
-              "/#" +
-                querystring.stringify({
-                  access_token: access_token,
-                  refresh_token: refresh_token,
-                })
-            );
             // MAKING REQUEST FOR TOP TRACKS
             axios
               .get(
@@ -191,6 +186,8 @@ app.get("/callback", function (req, res) {
                         db.run(i);
                       });
                       let userID = userInfo.id;
+                      console.log(userID);
+                      let flags = 0;
                       db.get(
                         "SELECT COUNT(userID) AS numUsers FROM Users",
                         (err, num) => {
@@ -205,14 +202,14 @@ app.get("/callback", function (req, res) {
                                       user.userID +
                                       '"',
                                     (err, row) => {
-                                      if (songs0.length < 10) {
+                                      if (song0.length < 10) {
                                         temp.push(parseFloat(row.Acousticness));
                                         temp.push(parseFloat(row.Danceability));
                                         temp.push(parseFloat(row.Energy));
                                         temp.push(parseFloat(row.Liveness));
                                         temp.push(parseFloat(row.Valence));
                                         temp.push(parseFloat(row.Speechiness));
-                                        songs0.push(temp);
+                                        song0.push(temp);
                                         temp = [];
                                       } else {
                                         temp.push(parseFloat(row.Acousticness));
@@ -221,36 +218,54 @@ app.get("/callback", function (req, res) {
                                         temp.push(parseFloat(row.Liveness));
                                         temp.push(parseFloat(row.Valence));
                                         temp.push(parseFloat(row.Speechiness));
-                                        songs1.push(temp);
+                                        song1.push(temp);
                                         temp = [];
                                       }
+                                      db.get(
+                                        "SELECT COUNT(DISTINCT userID) AS numUsers FROM Users",
+                                        (err, num) => {
+                                          if (num == 1) {
+                                            song1 = song0;
+                                          }
+                                        }
+                                      );
                                     }
                                   );
                                 }
                               );
+
                               console.log("here");
                               setTimeout(() => {
-                                console.log(songs0);
-                                console.log(songs1);
+                                console.log(song0);
+                                console.log(song1);
                                 console.log(
                                   "cos similarity is: " +
-                                    avg_cosine_similarity(songs0, songs1, 10, 6)
+                                    avg_cosine_similarity(song0, song1, 10, 6)
+                                );
+                                res.redirect(
+                                  "/?#" +
+                                    querystring.stringify({
+                                      access_token: access_token,
+                                      refresh_token: refresh_token,
+                                      score: avg_cosine_similarity(
+                                        song0,
+                                        song1,
+                                        10,
+                                        6
+                                      ),
+                                    })
                                 );
                               }, "1000");
                             });
                           }
-                          temp = [];
                         }
                       );
-                      console.log(songs0);
-                      console.log(songs1);
-                    });
+                    }); //end serialize
                   });
               });
           })
           .catch((error) => {
             res.send(error);
-            return;
           });
       } else {
         res.send(response);
@@ -258,10 +273,18 @@ app.get("/callback", function (req, res) {
     })
     .catch((error) => {
       res.send(error);
-      return;
     });
 });
-/// HEHRE THIS ASJLFNDLASKNFLKDSJBNF<DM KLSDJFN:SDLKNFS:DLGNSDKBGKBDFSDNFKSDNFKSLDBJFKSDBFKSDJFLSDJFBSDKHJFBDFHKDSJFSDKJF
+
+app.get("*", function (req, res) {
+  console.log(req);
+  console.log(res);
+});
+
+// app.get("/#", function (req, res) {
+//   console.log("here: ", req);
+// });
+
 var port = 8888;
 app.listen(port, function () {
   console.log(`Simlify is running!`);
@@ -279,6 +302,8 @@ function giveMusicInserts(trackList, features) {
   let i = 0;
   features.forEach((index) => {
     let songName = trackList[i].name;
+    songName = songName.replaceAll('"', "");
+    songName = songName.replaceAll("'", "");
     let songID = trackList[i].id;
     let Acousticness = features[i].acousticness;
     let Danceability = features[i].danceability;
@@ -288,7 +313,7 @@ function giveMusicInserts(trackList, features) {
     let Speechiness = features[i].speechiness;
     let Tempo = features[i].tempo;
     statements.push(
-      `INSERT INTO Music (songID,songName,Acousticness,Danceability,Energy,Liveness,Valence,Speechiness,Tempo) VALUES ('${songID}', '${songName}', '${Acousticness}', '${Danceability}',  '${Energy}', '${Liveness}', '${Valence}', '${Speechiness}', '${Tempo}')`
+      `INSERT OR IGNORE INTO Music (songID,songName,Acousticness,Danceability,Energy,Liveness,Valence,Speechiness,Tempo) VALUES ('${songID}', '${songName}', '${Acousticness}', '${Danceability}',  '${Energy}', '${Liveness}', '${Valence}', '${Speechiness}', '${Tempo}')`
     );
     i++;
   });
@@ -319,8 +344,10 @@ function getUserSongInserts(userInfo, trackIDs) {
   trackIDs.forEach((i) => {
     let userID = userInfo.id;
     let songID = i;
+
     statements.push(
-      `INSERT INTO userSongs (userID, songID) VALUES ('${userID}', '${songID}')`
+      `INSERT OR IGNORE INTO userSongs (userID, songID) VALUES ('${userID}', '${songID}')`
+      //      `INSERT OR IGNORE INTO userSongs (userID, songID) VALUES ('${userID}', '${songID}')`
     );
   });
   return statements;
@@ -370,10 +397,11 @@ function my_round(num) {
 function cosine_similarity(v0, v1, len) {
   let num = dot_product(v0, v1, len);
   let denom = vector_magnitude(v0) * vector_magnitude(v1);
+
   if (denom == 0) {
     return "Divison by 0 error";
   }
-  return my_round(num / denom);
+  return num / denom;
 }
 // let vector0 = [[ 3, 2, 0, 5], [ 1, 7, 0, 5]];
 // let vector1 = [[3, 1, 1, 4], [1, 6, 0, 5]];

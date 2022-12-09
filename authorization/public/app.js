@@ -44,6 +44,7 @@
   // GET TOKENS
   var access_token = params.access_token,
       error = params.error;
+  console.log(params);
 
   var userProfileSource1 = document.getElementById('user-profile-template1').innerHTML,
       userProfileTemplate1 = Handlebars.compile(userProfileSource1),
@@ -101,7 +102,7 @@
           }
           var cosineSim = avg_cosine_similarity(song0, song1, 10, 6);
           tracksPlaceholder.innerHTML = tracksTemplate({
-            cosine: cosineSim,
+            cosine: params.score,
             tracks: data.trackList,
             artist: data.trackList
           });

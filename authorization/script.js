@@ -11,14 +11,16 @@ var sqlite3 = require("sqlite3").verbose();
 const db = new sqlite3.Database("455app.db");
 const axios = require("axios");
 const { request } = require('http');
+const { application } = require('express');
 
 var stateKey = 'spotify_auth_state';
-app.set('view engine', 'hbs');
+app.set('view engine', 'ejs');
 app.set('views', __dirname + '/views');
 app.use(express.static(__dirname + '/public'));
 app.use(cookieParser());
 app.use(cors());
 app.use(bodyParser.urlencoded({ extended: true }));
+app.use(cors());
 /** DUMMY DATA */
 var temp = [];
 var song0 = [];
@@ -125,13 +127,6 @@ app.get("/callback", function (req, res) {
                 console.log(row);
               });
             });
-            res.redirect(
-              "/#" +
-                querystring.stringify({
-                  access_token: access_token,
-                  refresh_token: refresh_token,
-                })
-            );
             // MAKING REQUEST FOR TOP TRACKS
             axios
               .get(
@@ -227,11 +222,20 @@ app.get("/callback", function (req, res) {
                                   );
                                 }
                               );
+
                               console.log("here");
                               setTimeout(() => {
                                 console.log(song0);
                                 console.log(song1);
-                               console.log("cos similarity is: " + avg_cosine_similarity(song0, song1, 10, 6));
+                                console.log("cos similarity is: " + avg_cosine_similarity(song0, song1, 10, 6));
+                                res.redirect(
+                                  "/?#" +
+                                    querystring.stringify({
+                                      access_token: access_token,
+                                      refresh_token: refresh_token,
+                                      score: avg_cosine_similarity(song0, song1, 10, 6)
+                                    })
+                                );
                               }, "1000");
                             });
                           }
@@ -251,8 +255,16 @@ app.get("/callback", function (req, res) {
     .catch((error) => {
       res.send(error);
     });
-});
+})
 
+app.get('*', function(req, res) {
+  console.log(req);
+  console.log(res);
+})
+
+// app.get("/#", function (req, res) {
+//   console.log("here: ", req);
+// });
 
 var port = 8888;
 app.listen(port, function () {

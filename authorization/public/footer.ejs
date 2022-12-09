@@ -1,0 +1,26 @@
+</div>
+</dl>
+</div>
+<div class="tracks-container">
+<h2>- Your Top Tracks -</h2>
+<table class="table">
+  <thead>
+  {{#each tracks}}
+    <tr>
+      <td class="name">
+        {{this.name}}
+        {{#each this.artists}}
+        <span>
+            {{this.name}}
+        </span>
+    {{/each}}
+    <tr>
+  {{/each}}
+</table>
+</script>
+
+<script src="//cdnjs.cloudflare.com/ajax/libs/handlebars.js/2.0.0-alpha.1/handlebars.min.js"></script>
+<script src="http://code.jquery.com/jquery-1.10.1.min.js"></script>
+<script type="module" src="app.js"></script>
+</body>
+</html>

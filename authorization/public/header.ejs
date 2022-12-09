@@ -1,0 +1,58 @@
+<!doctype html>
+<html>
+  <head>
+    <title>SIMLIFY</title>
+    <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css">
+    <link href="style.css" rel="stylesheet" />
+    <style type="text/css">
+      #login, #loggedin {
+        display: none;
+      }
+      .text-overflow {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        width: 500px;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="container">
+      <div id="login">
+        <h1>SIMLIFY</h1>
+        <div class="btn-container">
+          <a href="/login" class="btn-primary">Log in with Spotify</a>
+        </div>
+      </div>
+      <div id="loggedin">
+        <div id="user-profile1">
+        </div>
+        <div id="tracks">
+        </div>
+      </div>
+    </div>
+
+    <script id="user-profile-template1" type="text/x-handlebars-template">
+      <div id="contain-user">
+        <h2>Hi {{display_name}}!</h2>
+        <div class="media">
+          <div class="pull-left">
+            <img class="media-object" width="150" src="{{images.0.url}}" />
+          </div>
+          <div class="media-body">
+            <dl class="dl-horizontal">
+              <dt>Name</dt><dd class="clearfix">{{display_name}}</dd>
+              <dt>Spotify URI</dt><dd><a href="{{external_urls.spotify}}">{{external_urls.spotify}}</a></dd>
+            </dl>
+          </div>
+        </div>
+      </div>
+    </script>
+
+    <script id="tracks-template" type="text/x-handlebars-template">
+      <div class="tracks-media">
+        <dl class="dl-horizontal">
+          <div id="circles">
+          </div>
+          <div id="contain-cos">

@@ -188,21 +188,28 @@ app.get("/callback", function (req, res) {
                       let userID = userInfo.id;
                       console.log(userID);
                       let flags = 0;
+
                       db.get(
                         "SELECT COUNT(userID) AS numUsers FROM Users",
                         (err, num) => {
-                          if (num.numUsers == 2) {
+                          if (num.numUsers == 1) {
+                            //go back to login page
+                          } else {
+                            var userArray = [];
+
                             db.serialize(() => {
                               db.each(
-                                "SELECT userID FROM Users",
+                                "SELECT DISTINCT userID FROM Users",
                                 (err, user) => {
+                                  userArray.push(user.userID);
+
                                   db.each(
-                                    "SELECT Acousticness, Danceability, Energy, Liveness, Valence, Speechiness FROM userSongs NATURAL JOIN Music WHERE userID =" +
+                                    "SELECT userID, Acousticness, Danceability, Energy, Liveness, Valence, Speechiness FROM userSongs NATURAL JOIN Music WHERE userID =" +
                                       '"' +
                                       user.userID +
                                       '"',
                                     (err, row) => {
-                                      if (song0.length < 10) {
+                                      if (userArray[0] == row.userID) {
                                         temp.push(parseFloat(row.Acousticness));
                                         temp.push(parseFloat(row.Danceability));
                                         temp.push(parseFloat(row.Energy));
@@ -224,7 +231,7 @@ app.get("/callback", function (req, res) {
                                       db.get(
                                         "SELECT COUNT(DISTINCT userID) AS numUsers FROM Users",
                                         (err, num) => {
-                                          if (num == 1) {
+                                          if (num.numUsers == 1) {
                                             song1 = song0;
                                           }
                                         }
@@ -233,30 +240,29 @@ app.get("/callback", function (req, res) {
                                   );
                                 }
                               );
-
-                              console.log("here");
-                              setTimeout(() => {
-                                console.log(song0);
-                                console.log(song1);
-                                console.log(
-                                  "cos similarity is: " +
-                                    avg_cosine_similarity(song0, song1, 10, 6)
-                                );
-                                res.redirect(
-                                  "/?#" +
-                                    querystring.stringify({
-                                      access_token: access_token,
-                                      refresh_token: refresh_token,
-                                      score: avg_cosine_similarity(
-                                        song0,
-                                        song1,
-                                        10,
-                                        6
-                                      ),
-                                    })
-                                );
-                              }, "1000");
                             });
+                            console.log("here");
+                            setTimeout(() => {
+                              console.log(song0);
+                              console.log(song1);
+                              console.log(
+                                "cos similarity is: " +
+                                  avg_cosine_similarity(song0, song1, 10, 6)
+                              );
+                              res.redirect(
+                                "/?#" +
+                                  querystring.stringify({
+                                    access_token: access_token,
+                                    refresh_token: refresh_token,
+                                    score: avg_cosine_similarity(
+                                      song0,
+                                      song1,
+                                      10,
+                                      6
+                                    ),
+                                  })
+                              );
+                            }, "1000");
                           }
                         }
                       );

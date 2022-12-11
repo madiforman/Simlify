@@ -1,3 +1,8 @@
+
+
+
+
+
 /**
  * ALL REQUIRE STATEMENTS
  */
@@ -12,7 +17,7 @@ const db = new sqlite3.Database("455app.db");
 const axios = require("axios");
 const { request } = require("http");
 const { application } = require("express");
-
+/** setting up express enviornment */
 var stateKey = "spotify_auth_state";
 app.set("view engine", "ejs");
 app.set("views", __dirname + "/views");
@@ -21,11 +26,10 @@ app.use(cookieParser());
 app.use(cors());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cors());
-/** DUMMY DATA */
+/** Local Variables */
 var temp = [];
-var song0 = [];
-var song1 = [];
-var flag = 0;
+var songVector0 = [];
+var songVector1 = [];
 /**
  * Generates a random string containing numbers and letters
  * @param  {number} length The length of the string
@@ -41,15 +45,144 @@ var generateRandomString = function (length) {
   }
   return text;
 };
-
+/** FUNCTIONS FOR CREATING DB **/
 /**
- * SPOTIFY AUTH VARIABLES
+ * Creates and returns a list of insert statements to our music relation based on each users top most listened to songs
+ * @param {*} trackList - promise object of tracks
+ * @param {*} features - promise object of info about each track
+ * @returns Insert statments as list of strings
  */
+ function giveMusicInserts(trackList, features) {
+  var statements = [];
+  let i = 0;
+  features.forEach((index) => {
+    let songName = trackList[i].name;
+    songName = songName.replaceAll('"', "");
+    songName = songName.replaceAll("'", "");
+    let songID = trackList[i].id;
+    let Acousticness = features[i].acousticness;
+    let Danceability = features[i].danceability;
+    let Energy = features[i].energy;
+    let Liveness = features[i].liveness;
+    let Valence = features[i].valence;
+    let Speechiness = features[i].speechiness;
+    let Tempo = features[i].tempo;
+    statements.push(
+      `INSERT OR IGNORE INTO Music (songID,songName,Acousticness,Danceability,Energy,Liveness,Valence,Speechiness,Tempo) VALUES ('${songID}', '${songName}', '${Acousticness}', '${Danceability}',  '${Energy}', '${Liveness}', '${Valence}', '${Speechiness}', '${Tempo}')`
+    );
+    i++;
+  });
+  return statements;
+}
+/**
+ * Creates insert statements for User info
+ * @param {*} userInfo promise object of user info
+ * @returns insert statments as strings
+ */
+function giveUserInserts(userInfo) {
+  var statements = [];
+  let userID = userInfo.id;
+  let userName = userInfo.display_name;
+  statements.push(
+    `INSERT INTO Users (userID,Name) VALUES ('${userID}', '${userName}')`
+  );
+  return statements;
+}
+/**
+ *
+ * @param {*} userInfo
+ * @param {*} trackIDs
+ * @returns
+ */
+function getUserSongInserts(userInfo, trackIDs) {
+  let statements = [];
+  trackIDs.forEach((i) => {
+    let userID = userInfo.id;
+    let songID = i;
+
+    statements.push(
+      `INSERT OR IGNORE INTO userSongs (userID, songID) VALUES ('${userID}', '${songID}')`
+      //      `INSERT OR IGNORE INTO userSongs (userID, songID) VALUES ('${userID}', '${songID}')`
+    );
+  });
+  return statements;
+}
+
+/** FUNCTIONS USED FOR MANIPULATING DATA TO FIND COS SIMILARITY */
+/**
+ * Function to find the magnitude of a vector
+ * @param {*} v vector
+ * @returns magnitude of v
+ */
+function vector_magnitude(v) {
+  let sum = 0;
+  v.forEach((i) => {
+    sum += (i * i);
+  });
+  return Math.sqrt(sum);
+}
+/**
+ * Function to find the dot product of two vectors
+ * @param {*} v0 first vector
+ * @param {*} v1 second vector
+ * @param {*} len length of both vectors (must be the same)
+ * @returns dot product of v0 . v1
+ */
+function dot_product(v0, v1, len) {
+  let product = 0;
+  for (let i = 0; i < len; i++) {
+    product += +v0[i] * v1[i];
+  }
+  return product;
+}
+/**
+ * I wanted a function that will round to the second decimal place in a precise manner
+ * @param {*} num num to round
+ * @returns rounded number
+ */
+function my_round(num) {
+  return Math.round((num + Number.EPSILON) * 100) / 100;
+}
+/**
+ * Finds the cosine similarity of two vectors
+ * @param {*} v0 first vector
+ * @param {*} v1 second vector
+ * @param {*} len len of both vectors
+ */
+function cosine_similarity(v0, v1, len) {
+  let num = dot_product(v0, v1, len);
+  let denom = vector_magnitude(v0) * vector_magnitude(v1);
+
+  if (denom == 0) {
+    return "Divison by 0 error";
+  }
+  return num / denom;
+}
+// let vector0 = [[ 3, 2, 0, 5], [ 1, 7, 0, 5]];
+// let vector1 = [[3, 1, 1, 4], [1, 6, 0, 5]];
+/**
+ * Averages the cosine similarity of two lists of vectors
+ * @param {*} list0 first list of vectors
+ * @param {*} list1 second list of vectors
+ * @param {*} size number of vectors given (i.e. vector0 defined above has 2 vectors)
+ * @param {*} elems number of elemnts per vector (i.e. vector0 has 4 elements in each vector)
+ * @returns
+ */
+function avg_cosine_similarity(list0, list1, size, elems) {
+  let cos = 0;
+  for (let i = 0; i < size; i++) {
+    cos += cosine_similarity(list0[i], list1[i], elems);
+  }
+  return my_round(cos/size);
+}
+
+
+/* SPOTIFY AUTHORIZATION VARIABLES */
 var redirectUri = "http://localhost:8888/callback",
   clientId = "a2bd214fd5d44b278a1625e0f5376057",
   clientSecret = "546e170d6d1042eeab670d4f84d233f8";
 
-// LOGIN
+/* LOGIN */
 app.get("/login", function (req, res) {
   const state = generateRandomString(16);
   res.cookie(stateKey, state);
@@ -126,9 +259,6 @@ app.get("/callback", function (req, res) {
               for (let i = 0; i < userInserts.length; i++) {
                 db.run(userInserts[i]);
               }
-              db.each("SELECT * FROM Users", (err, row) => {
-                console.log(row);
-              });
             });
             // MAKING REQUEST FOR TOP TRACKS
             axios
@@ -169,31 +299,24 @@ app.get("/callback", function (req, res) {
                   )
                   .then((response) => {
                     // INSERT INTO MUSIC SQL DB
-                    let musicInserts = giveMusicInserts(
-                      trackList,
-                      response.data.audio_features
-                    );
-                    let userSongInserts = getUserSongInserts(
-                      userInfo,
-                      trackIds
-                    );
+                    let musicInserts = giveMusicInserts(trackList, response.data.audio_features);
+                    let userSongInserts = getUserSongInserts(userInfo, trackIds);
+
                     db.serialize(() => {
+                      //add data to tables
                       musicInserts.forEach((i) => {
-                        //add data to tables
                         db.run(i);
                       });
                       userSongInserts.forEach((i) => {
                         db.run(i);
                       });
                       let userID = userInfo.id;
-                      console.log(userID);
-                      let flags = 0;
-
+                      // console.log(userID);
                       db.get(
                         "SELECT COUNT(userID) AS numUsers FROM Users",
                         (err, num) => {
                           if (num.numUsers == 1) {
-                            //go back to login page
+                            res.redirect("/?#");
                           } else {
                             var userArray = [];
 
@@ -202,13 +325,13 @@ app.get("/callback", function (req, res) {
                                 "SELECT DISTINCT userID FROM Users",
                                 (err, user) => {
                                   userArray.push(user.userID);
-
                                   db.each(
                                     "SELECT userID, Acousticness, Danceability, Energy, Liveness, Valence, Speechiness FROM userSongs NATURAL JOIN Music WHERE userID =" +
                                       '"' +
                                       user.userID +
                                       '"',
                                     (err, row) => {
+                                      //creating vectors of song data
                                       if (userArray[0] == row.userID) {
                                         temp.push(parseFloat(row.Acousticness));
                                         temp.push(parseFloat(row.Danceability));
@@ -216,7 +339,7 @@ app.get("/callback", function (req, res) {
                                         temp.push(parseFloat(row.Liveness));
                                         temp.push(parseFloat(row.Valence));
                                         temp.push(parseFloat(row.Speechiness));
-                                        song0.push(temp);
+                                        songVector0.push(temp);
                                         temp = [];
                                       } else {
                                         temp.push(parseFloat(row.Acousticness));
@@ -225,14 +348,15 @@ app.get("/callback", function (req, res) {
                                         temp.push(parseFloat(row.Liveness));
                                         temp.push(parseFloat(row.Valence));
                                         temp.push(parseFloat(row.Speechiness));
-                                        song1.push(temp);
+                                        songVector1.push(temp);
                                         temp = [];
                                       }
+                                      //checking to see if a user is comparing against themself
                                       db.get(
                                         "SELECT COUNT(DISTINCT userID) AS numUsers FROM Users",
                                         (err, num) => {
                                           if (num.numUsers == 1) {
-                                            song1 = song0;
+                                            songVector1 = songVector0.filter(() => true);
                                           }
                                         }
                                       );
@@ -241,25 +365,15 @@ app.get("/callback", function (req, res) {
                                 }
                               );
                             });
-                            console.log("here");
                             setTimeout(() => {
-                              console.log(song0);
-                              console.log(song1);
-                              console.log(
-                                "cos similarity is: " +
-                                  avg_cosine_similarity(song0, song1, 10, 6)
-                              );
+                              console.log(songVector0);
+                              console.log(songVector1);
                               res.redirect(
                                 "/?#" +
                                   querystring.stringify({
                                     access_token: access_token,
                                     refresh_token: refresh_token,
-                                    score: avg_cosine_similarity(
-                                      song0,
-                                      song1,
-                                      10,
-                                      6
-                                    ),
+                                    score: avg_cosine_similarity(songVector0, songVector1,  10,  6),
                                   })
                               );
                             }, "1000");
@@ -282,148 +396,8 @@ app.get("/callback", function (req, res) {
     });
 });
 
-app.get("*", function (req, res) {
-  console.log(req);
-  console.log(res);
-});
-
-// app.get("/#", function (req, res) {
-//   console.log("here: ", req);
-// });
-
 var port = 8888;
 app.listen(port, function () {
   console.log(`Simlify is running!`);
 });
 
-/** FUNCTIONS FOR CREATING DB **/
-/**
- * Creates and returns a list of insert statements to our music relation based on each users top most listened to songs
- * @param {*} trackList - promise object of tracks
- * @param {*} features - promise object of info about each track
- * @returns Insert statments as list of strings
- */
-function giveMusicInserts(trackList, features) {
-  var statements = [];
-  let i = 0;
-  features.forEach((index) => {
-    let songName = trackList[i].name;
-    songName = songName.replaceAll('"', "");
-    songName = songName.replaceAll("'", "");
-    let songID = trackList[i].id;
-    let Acousticness = features[i].acousticness;
-    let Danceability = features[i].danceability;
-    let Energy = features[i].energy;
-    let Liveness = features[i].liveness;
-    let Valence = features[i].valence;
-    let Speechiness = features[i].speechiness;
-    let Tempo = features[i].tempo;
-    statements.push(
-      `INSERT OR IGNORE INTO Music (songID,songName,Acousticness,Danceability,Energy,Liveness,Valence,Speechiness,Tempo) VALUES ('${songID}', '${songName}', '${Acousticness}', '${Danceability}',  '${Energy}', '${Liveness}', '${Valence}', '${Speechiness}', '${Tempo}')`
-    );
-    i++;
-  });
-  return statements;
-}
-/**
- * Creates insert statements for User info
- * @param {*} userInfo promise object of user info
- * @returns insert statments as strings
- */
-function giveUserInserts(userInfo) {
-  var statements = [];
-  let userID = userInfo.id;
-  let userName = userInfo.display_name;
-  statements.push(
-    `INSERT INTO Users (userID,Name) VALUES ('${userID}', '${userName}')`
-  );
-  return statements;
-}
-/**
- *
- * @param {*} userInfo
- * @param {*} trackIDs
- * @returns
- */
-function getUserSongInserts(userInfo, trackIDs) {
-  let statements = [];
-  trackIDs.forEach((i) => {
-    let userID = userInfo.id;
-    let songID = i;
-
-    statements.push(
-      `INSERT OR IGNORE INTO userSongs (userID, songID) VALUES ('${userID}', '${songID}')`
-      //      `INSERT OR IGNORE INTO userSongs (userID, songID) VALUES ('${userID}', '${songID}')`
-    );
-  });
-  return statements;
-}
-/** FUNCTIONS USED FOR MANIPULATING DATA TO FIND COS SIMILARITY */
-/** NOTE: A VECTOR CANNOT CONTAIN ALL ZEROES BUT I DONT THINK THAT SHOULD HAPPEN */
-/**
- * Function to find the magnitude of a vector
- * @param {*} v vector
- * @returns magnitude of v
- */
-function vector_magnitude(v) {
-  let sum = 0;
-  v.forEach((i) => {
-    sum += i * i;
-  });
-  return Math.sqrt(sum);
-}
-/**
- * Function to find the dot product of two vectors
- * @param {*} v0 first vector
- * @param {*} v1 second vector
- * @param {*} len length of both vectors (must be the same)
- * @returns dot product of v0 . v1
- */
-function dot_product(v0, v1, len) {
-  let product = 0;
-  for (let i = 0; i < len; i++) {
-    product += +v0[i] * v1[i];
-  }
-  return product;
-}
-/**
- * I wanted a function that will round to the second decimal place in a precise manner
- * @param {*} num num to round
- * @returns rounded number
- */
-function my_round(num) {
-  return Math.round((num + Number.EPSILON) * 100) / 100;
-}
-/**
- * Finds the cosine similarity of two vectors
- * @param {*} v0 first vector
- * @param {*} v1 second vector
- * @param {*} len len of both vectors
- */
-function cosine_similarity(v0, v1, len) {
-  let num = dot_product(v0, v1, len);
-  let denom = vector_magnitude(v0) * vector_magnitude(v1);
-
-  if (denom == 0) {
-    return "Divison by 0 error";
-  }
-  return num / denom;
-}
-// let vector0 = [[ 3, 2, 0, 5], [ 1, 7, 0, 5]];
-// let vector1 = [[3, 1, 1, 4], [1, 6, 0, 5]];
-// let v = [[0, 1, 0, 0], [1, 1, 1, 1]];
-/**
- * Averages the cosine similarity of two lists of vectors
- * @param {*} list0 first list of vectors
- * @param {*} list1 second list of vectors
- * @param {*} size number of vectors given (i.e. vector0 defined above has 2 vectors)
- * @param {*} elems number of elemnts per vector (i.e. vector0 has 4 elements in each vector)
- * @returns
- */
-function avg_cosine_similarity(list0, list1, size, elems) {
-  let cos = 0;
-  for (let i = 0; i < size; i++) {
-    cos += cosine_similarity(list0[i], list1[i], elems);
-  }
-  return my_round(cos / size);
-}

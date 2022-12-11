@@ -29,10 +29,11 @@ app.use(cookieParser());
 app.use(cors());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cors());
-/** Local Variables */
+/** LOCAL VARIABLES */
 var temp = [];
 var songVector0 = [];
 var songVector1 = [];
+/**** FUNCTIONS USED THROUGHOUT SCRIPT (DB CREATION/POPULATION, VECTOR BUILDING/MANIPULATION) *****/
 /**
  * Generates a random string containing numbers and letters
  * @param  {number} length The length of the string
@@ -48,7 +49,6 @@ var generateRandomString = function (length) {
   }
   return text;
 };
-/** FUNCTIONS FOR CREATING DB **/
 /**
  * Creates and returns a list of insert statements to our music relation based on each users top most listened to songs
  * @param {*} trackList - promise object of tracks
@@ -92,25 +92,22 @@ function giveUserInserts(userInfo) {
   return statements;
 }
 /**
- *
- * @param {*} userInfo
- * @param {*} trackIDs
- * @returns
+ * Create insert statments for userSongs relation
+ * @param {*} userInfo promise object of user info
+ * @param {*} trackIDs ids of listened to songs
+ * @returns list of insert statements as strings
  */
 function getUserSongInserts(userInfo, trackIDs) {
   let statements = [];
   trackIDs.forEach((i) => {
     let userID = userInfo.id;
     let songID = i;
-
     statements.push(
       `INSERT OR IGNORE INTO userSongs (userID, songID) VALUES ('${userID}', '${songID}')`
-      //      `INSERT OR IGNORE INTO userSongs (userID, songID) VALUES ('${userID}', '${songID}')`
     );
   });
   return statements;
 }
-/** FUNCTIONS USED FOR MANIPULATING DATA TO FIND COS SIMILARITY */
 /**
  * Function to find the magnitude of a vector
  * @param {*} v vector
@@ -138,14 +135,6 @@ function dot_product(v0, v1, len) {
   return product;
 }
 /**
- * I wanted a function that will round to the second decimal place in a precise manner
- * @param {*} num num to round
- * @returns rounded number
- */
-function my_round(num) {
-  return Math.round((num + Number.EPSILON) * 100) / 100;
-}
-/**
  * Finds the cosine similarity of two vectors
  * @param {*} v0 first vector
  * @param {*} v1 second vector
@@ -160,14 +149,20 @@ function cosine_similarity(v0, v1, len) {
   }
   return num / denom;
 }
-// let vector0 = [[ 3, 2, 0, 5], [ 1, 7, 0, 5]];
-// let vector1 = [[3, 1, 1, 4], [1, 6, 0, 5]];
+/**
+ * I wanted a function that will round to the second decimal place in a precise manner
+ * @param {*} num num to round
+ * @returns rounded number
+ */
+ function my_round(num) {
+  return Math.round((num + Number.EPSILON) * 100) / 100;
+}
 /**
  * Averages the cosine similarity of two lists of vectors
  * @param {*} list0 first list of vectors
  * @param {*} list1 second list of vectors
- * @param {*} size number of vectors given (i.e. vector0 defined above has 2 vectors)
- * @param {*} elems number of elemnts per vector (i.e. vector0 has 4 elements in each vector)
+ * @param {*} size number of vectors given 
+ * @param {*} elems number of elemnts per vector
  * @returns
  */
 function avg_cosine_similarity(list0, list1, size, elems) {
@@ -177,14 +172,12 @@ function avg_cosine_similarity(list0, list1, size, elems) {
   }
   return my_round(cos/size);
 }
-
-
 /* SPOTIFY AUTHORIZATION VARIABLES */
 var redirectUri = "http://localhost:8888/callback",
   clientId = "a2bd214fd5d44b278a1625e0f5376057",
   clientSecret = "546e170d6d1042eeab670d4f84d233f8";
 
-/* LOGIN */
+/* LOGIN AND BEGINNING OF SCRIPT */
 app.get("/login", function (req, res) {
   const state = generateRandomString(16);
   res.cookie(stateKey, state);

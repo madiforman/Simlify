@@ -5,9 +5,7 @@ const values = {
   "6 Months": "medium_term",
   "Several Years": "long_term",
 };
-
 var timeMenu = document.getElementById("time");
-
 async function timeGetter(time) {
   try {
     let url = `https://api.spotify.com/v1/me/top/tracks?time_range=${time}&limit=10&offset=0`;
@@ -17,7 +15,6 @@ async function timeGetter(time) {
     return;
   }
 }
-
 (async function () {
   /**
    * Obtains parameters from the hash of the URL
@@ -114,9 +111,6 @@ async function timeGetter(time) {
       $("#loggedin").hide();
     }
   }
-
-
-
 })();
 
 function drawCircles(simScore) {

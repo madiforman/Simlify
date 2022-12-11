@@ -1,11 +1,14 @@
-
-
-
-
-
-/**
- * ALL REQUIRE STATEMENTS
- */
+/* ================================================================================
+ Name        : Simlify
+ Authors     : Seung Park, Ben McAuiffe, Madison Sanchez-Forman, and Mitch Hurley
+ Version     : 12.16.22
+ Description : Uses the Spotify API to login and authenticate two users. At the 
+ login of each user, data is extracted from their account about their individual 
+ listening history. We use this data to create 10 vectors corresponding to their
+ top 10 most listened to songs for a time period of their chosing, and then use
+ cosine similarity to estimate how similar each users music taste is
+ ================================================================================ */
+/* ALL REQUIRE STATEMENTS */
 const express = require("express");
 const app = express();
 var cookieParser = require("cookie-parser");
@@ -107,7 +110,6 @@ function getUserSongInserts(userInfo, trackIDs) {
   });
   return statements;
 }
-
 /** FUNCTIONS USED FOR MANIPULATING DATA TO FIND COS SIMILARITY */
 /**
  * Function to find the magnitude of a vector
@@ -201,9 +203,7 @@ app.get("/login", function (req, res) {
   res.redirect(`https://accounts.spotify.com/authorize?${queryParams}`);
 });
 
-/**
- * CREATE TABLES
- */
+/* CREATE TABLES */
 db.serialize(() => {
   db.run("DROP TABLE IF EXISTS Music");
   db.run("DROP TABLE IF EXISTS Users");
@@ -215,7 +215,7 @@ db.serialize(() => {
   );
 });
 
-// GET AUTHORIZATION AND USER INFORMATION
+/* GET AUTHORIZATION AND USER INFORMATION */
 app.get("/callback", function (req, res) {
   // your application requests refresh and access tokens
   // after checking the state parameter

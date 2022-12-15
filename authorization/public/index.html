@@ -37,7 +37,7 @@
 
     <script id="user-profile-template1" type="text/x-handlebars-template">
       <div id="contain-user">
-        <h2>Hi {{display_name}}!</h2>
+        <h2 id = "header"> Hi {{display_name}}!</h2>
         <div class="media">
           <div class="pull-left">
             <img class="media-object" width="150" src="{{images.0.url}}" />
@@ -80,6 +80,8 @@
             <tr>
           {{/each}}
         </table>
+        
+        
     </script>
 
     <div id="container"></div>

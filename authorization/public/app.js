@@ -45,7 +45,6 @@ async function timeGetter(time) {
   });
 
   var params = getHashParams();
-
   // GET TOKENS
   var access_token = params.access_token,
     error = params.error;
@@ -63,6 +62,7 @@ async function timeGetter(time) {
   if (error) {
     alert("There was an error during the authentication");
   } else {
+    let secondName = "";
     if (access_token) {
       $.ajax({
         url: "https://api.spotify.com/v1/me",
@@ -70,9 +70,13 @@ async function timeGetter(time) {
           Authorization: "Bearer " + access_token,
         },
         success: function (response) {
+          secondName = response.display_name;
+
           userProfilePlaceholder1.innerHTML = userProfileTemplate1(response);
+          //secondName = response.data.
           $("#login").hide();
           $("#loggedin").show();
+
         },
       });
 
@@ -98,12 +102,18 @@ async function timeGetter(time) {
             }
           }
           timeMenu.remove();
+          let firstName = params.firstName;
+          document.getElementById("header").innerHTML = "Hi " + firstName + " and " + secondName + "!";
           document.getElementById("time-question").remove();
           tracksPlaceholder.innerHTML = tracksTemplate({
             cosine: 100 * params.score,
             tracks: data.trackList,
             artist: data.trackList,
+           // songs: params.user1Songs, //use songs in html
+            user1Name: params.firstName,
           });
+          
+  
         },
       });
     } else {

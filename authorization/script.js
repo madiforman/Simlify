@@ -8,6 +8,7 @@
  top 10 most listened to songs for a time period of their chosing, and then use
  cosine similarity to estimate how similar each users music taste is
  ================================================================================ */
+ 
 /* ALL REQUIRE STATEMENTS */
 const express = require("express");
 const app = express();
@@ -33,6 +34,8 @@ app.use(cors());
 var temp = [];
 var songVector0 = [];
 var songVector1 = [];
+var songNames0 = [];
+var songNames1 = [];
 /**** FUNCTIONS USED THROUGHOUT SCRIPT (DB CREATION/POPULATION, VECTOR BUILDING/MANIPULATION) *****/
 /**
  * Generates a random string containing numbers and letters
@@ -195,7 +198,7 @@ app.get("/login", function (req, res) {
 
   res.redirect(`https://accounts.spotify.com/authorize?${queryParams}`);
 });
-
+let user1Name = "";
 /* CREATE TABLES */
 db.serialize(() => {
   db.run("DROP TABLE IF EXISTS Music");
@@ -247,7 +250,7 @@ app.get("/callback", function (req, res) {
             // INSERT INTO USERS SQL SB
             let userInserts = giveUserInserts(response.data);
             let userInfo = response.data;
-            console.log(userInserts);
+            //console.log(userInserts);
             db.serialize(() => {
               for (let i = 0; i < userInserts.length; i++) {
                 db.run(userInserts[i]);
@@ -256,7 +259,7 @@ app.get("/callback", function (req, res) {
             // MAKING REQUEST FOR TOP TRACKS
             axios
               .get(
-                `https://api.spotify.com/v1/me/top/tracks?time_range=short_term&limit=10&offset=0`,
+                `https://api.spotify.com/v1/me/top/tracks?time_range=short_term&limit=50&offset=0`,
                 {
                   headers: {
                     "content-type": "application/x-www-form-urlencoded",
@@ -267,6 +270,11 @@ app.get("/callback", function (req, res) {
               )
               .then((response) => {
                 let trackList = response.data.items;
+                let songList = [];
+                for(let i = 0; i < trackList.length; i++){
+                 // console.log(trackList[i].name);
+                 songList.push(trackList[i].name);
+                }
                 var trackIds = [];
                 for (var i = 0; i < response.data.limit; i++) {
                   var arr = trackList[i].uri.split(":");
@@ -306,10 +314,12 @@ app.get("/callback", function (req, res) {
                       let userID = userInfo.id;
                       // console.log(userID);
                       db.get(
-                        "SELECT COUNT(userID) AS numUsers FROM Users",
+                        "SELECT Name, COUNT(userID) AS numUsers FROM Users",
                         (err, num) => {
                           if (num.numUsers == 1) {
                             res.redirect("/?#");
+                            user1Name = num.Name;
+                            console.log(user1Name);
                           } else {
                             var userArray = [];
 
@@ -359,14 +369,17 @@ app.get("/callback", function (req, res) {
                               );
                             });
                             setTimeout(() => {
-                              console.log(songVector0);
-                              console.log(songVector1);
+                           //   console.log(songVector0);
+                            //  console.log(songVector1);
                               res.redirect(
                                 "/?#" +
                                   querystring.stringify({
                                     access_token: access_token,
                                     refresh_token: refresh_token,
-                                    score: avg_cosine_similarity(songVector0, songVector1,  10,  6),
+                                    score: avg_cosine_similarity(songVector0, songVector1,  50,  6),
+                                    user1Songs : songList,
+                                    firstName : user1Name,
+                                    //add first users top tracks
                                   })
                               );
                             }, "1000");

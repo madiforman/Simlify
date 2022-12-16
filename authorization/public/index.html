@@ -65,22 +65,40 @@
         </dl>
       </div>
       <div class="tracks-container">
-        <h2>- Your Top Tracks -</h2>
-        <table class="table">
-          <thead>
-          {{#each tracks}}
-            <tr>
-              <td class="name">
+        <div class="column">
+          <h2>- Your Top Tracks -</h2>
+          <table class="table">
+            <thead>
+            {{#each tracks}}
+              <tr>
+                <td class="name">
+                  {{this.name}}
+                  {{#each this.artists}}
+              <span>
                 {{this.name}}
-                {{#each this.artists}}
-      			<span>
-      				{{this.name}}
-      			</span>
-      		{{/each}}
-            <tr>
-          {{/each}}
-        </table>
-        
+              </span>
+            {{/each}}
+              <tr>
+            {{/each}}
+          </table>
+        </div>
+        <div class="column">
+          <h2>- Your Top Tracks -</h2>
+          <table class="table">
+            <thead>
+            {{#each songs}}
+              <tr>
+                <td class="name">
+                  {{this.name}}
+                  {{#each this.artists}}
+              <span>
+                {{this.name}}
+              </span>
+            {{/each}}
+              <tr>
+            {{/each}}
+          </table>
+        </div>
         
     </script>
 

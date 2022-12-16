@@ -199,6 +199,7 @@ app.get("/login", function (req, res) {
   res.redirect(`https://accounts.spotify.com/authorize?${queryParams}`);
 });
 let user1Name = "";
+let songList = [];
 /* CREATE TABLES */
 db.serialize(() => {
   db.run("DROP TABLE IF EXISTS Music");
@@ -270,11 +271,7 @@ app.get("/callback", function (req, res) {
               )
               .then((response) => {
                 let trackList = response.data.items;
-                let songList = [];
-                for(let i = 0; i < trackList.length; i++){
-                 // console.log(trackList[i].name);
-                 songList.push(trackList[i].name);
-                }
+                // console.log(songList);
                 var trackIds = [];
                 for (var i = 0; i < response.data.limit; i++) {
                   var arr = trackList[i].uri.split(":");
@@ -320,6 +317,9 @@ app.get("/callback", function (req, res) {
                             res.redirect("/?#");
                             user1Name = num.Name;
                             console.log(user1Name);
+                            for(let i = 0; i < trackList.length; i++){
+                              songList.push(trackList[i].name);
+                            }
                           } else {
                             var userArray = [];
 

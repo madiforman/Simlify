@@ -70,6 +70,7 @@ async function timeGetter(time) {
           Authorization: "Bearer " + access_token,
         },
         success: function (response) {
+          response.display_name = response.display_name.charAt(0).toUpperCase() + response.display_name.slice(1);
           secondName = response.display_name;
 
           userProfilePlaceholder1.innerHTML = userProfileTemplate1(response);

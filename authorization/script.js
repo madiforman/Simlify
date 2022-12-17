@@ -251,7 +251,6 @@ app.get("/callback", function (req, res) {
             // INSERT INTO USERS SQL SB
             let userInserts = giveUserInserts(response.data);
             let userInfo = response.data;
-            //console.log(userInserts);
             db.serialize(() => {
               for (let i = 0; i < userInserts.length; i++) {
                 db.run(userInserts[i]);
@@ -271,7 +270,6 @@ app.get("/callback", function (req, res) {
               )
               .then((response) => {
                 let trackList = response.data.items;
-                // console.log(songList);
                 var trackIds = [];
                 for (var i = 0; i < response.data.limit; i++) {
                   var arr = trackList[i].uri.split(":");
@@ -308,15 +306,12 @@ app.get("/callback", function (req, res) {
                       userSongInserts.forEach((i) => {
                         db.run(i);
                       });
-                      let userID = userInfo.id;
-                      // console.log(userID);
                       db.get(
                         "SELECT Name, COUNT(userID) AS numUsers FROM Users",
                         (err, num) => {
                           if (num.numUsers == 1) {
                             res.redirect("/?#");
                             user1Name = num.Name;
-                            console.log(user1Name);
                             for(let i = 0; i < trackList.length; i++){
                               songList.push(trackList[i].name);
                             }
@@ -369,8 +364,6 @@ app.get("/callback", function (req, res) {
                               );
                             });
                             setTimeout(() => {
-                           //   console.log(songVector0);
-                            //  console.log(songVector1);
                               res.redirect(
                                 "/?#" +
                                   querystring.stringify({

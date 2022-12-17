@@ -1,11 +1,5 @@
-var timePeriod = "long_term";
+var timePeriod = "short_term";
 
-const values = {
-  "4 Weeks": "short_term",
-  "6 Months": "medium_term",
-  "Several Years": "long_term",
-};
-var timeMenu = document.getElementById("time");
 async function timeGetter(time) {
   try {
     let url = `https://api.spotify.com/v1/me/top/tracks?time_range=${time}&limit=10&offset=0`;
@@ -30,19 +24,6 @@ async function timeGetter(time) {
     }
     return hashParams;
   }
-
-  for (let val in values) {
-    var option = document.createElement("option");
-    option.setAttribute("value", values[val]);
-
-    let optionText = document.createTextNode(val);
-    option.appendChild(optionText);
-    timeMenu.appendChild(option);
-  }
-  timeMenu.addEventListener("change", (e) => {
-    timePeriod = e.target.value;
-   // console.log(e.target.value);
-  });
 
   var params = getHashParams();
   // GET TOKENS
@@ -82,8 +63,7 @@ async function timeGetter(time) {
       });
 
       $.ajax({
-        url: await timeGetter(document.getElementById("time").value),
-        //`https://api.spotify.com/v1/me/top/tracks?time_range=${timePeriod}&limit=10&offset=0`,
+        url: await timeGetter(timePeriod),
         headers: {
           Authorization: "Bearer " + access_token,
         },
@@ -102,10 +82,8 @@ async function timeGetter(time) {
               }
             }
           }
-          timeMenu.remove();
           let firstName = params.firstName;
           document.getElementById("header").innerHTML = "Hi " + firstName + " and " + secondName + "!";
-          document.getElementById("time-question").remove();
           tracksPlaceholder.innerHTML = tracksTemplate({
             cosine: 100 * params.score,
             tracks: data.trackList,
@@ -123,18 +101,3 @@ async function timeGetter(time) {
     }
   }
 })();
-
-function drawCircles(simScore) {
-  if (simScore >= 0 && simScore < 0.3) {
-    document.getElementById("circles::after").style.left = "190px";
-  } else if (simScore >= 0.3 && simScore < 0.5) {
-    document.getElementById("circles::after").style.left = "150px";
-  } else if (simScore >= 0.5 && simScore < 0.7) {
-    document.getElementById("circles::after").style.left = "100px";
-  } else if (simScore >= 0.7 && simScore < 0.9) {
-    document.getElementById("circles::after").style.left = "60px";
-  } else if (simScore >= 0.9 && simScore < 1) {
-    document.getElementById("circles::after").style.left = "40px";
-  }
-  //draws the circle based on similarity score
-}

@@ -1,14 +1,8 @@
-var timePeriod = "long_term";
+var timePeriod = "short_term";
 
-const values = {
-  "4 Weeks": "short_term",
-  "6 Months": "medium_term",
-  "Several Years": "long_term",
-};
-var timeMenu = document.getElementById("time");
 async function timeGetter(time) {
   try {
-    let url = `https://api.spotify.com/v1/me/top/tracks?time_range=long_range&limit=50&offset=0`;
+    let url = `https://api.spotify.com/v1/me/top/tracks?time_range=short_range&limit=10&offset=0`;
     return url;
   } catch (err) {
     console.log(err);
@@ -31,21 +25,7 @@ async function timeGetter(time) {
     return hashParams;
   }
 
-  for (let val in values) {
-    var option = document.createElement("option");
-    option.setAttribute("value", values[val]);
-
-    let optionText = document.createTextNode(val);
-    option.appendChild(optionText);
-    timeMenu.appendChild(option);
-  }
-  timeMenu.addEventListener("change", (e) => {
-    timePeriod = e.target.value;
-    // console.log(e.target.value);
-  });
-
   var params = getHashParams();
-
   // GET TOKENS
   var access_token = params.access_token,
     error = params.error;
@@ -63,6 +43,7 @@ async function timeGetter(time) {
   if (error) {
     alert("There was an error during the authentication");
   } else {
+    let secondName = "";
     if (access_token) {
       $.ajax({
         url: "https://api.spotify.com/v1/me",
@@ -70,14 +51,20 @@ async function timeGetter(time) {
           Authorization: "Bearer " + access_token,
         },
         success: function (response) {
+          response.display_name =
+            response.display_name.charAt(0).toUpperCase() +
+            response.display_name.slice(1);
+          secondName = response.display_name;
+
           userProfilePlaceholder1.innerHTML = userProfileTemplate1(response);
+          //secondName = response.data.
           $("#login").hide();
           $("#loggedin").show();
         },
       });
 
       $.ajax({
-        url: "https:api.spotify.com/v1/me/top/tracks?time_range=long_range&limit=50&offset=0",
+        url: await timeGetter(timePeriod),
         headers: {
           Authorization: "Bearer " + access_token,
         },
@@ -96,12 +83,15 @@ async function timeGetter(time) {
               }
             }
           }
-          timeMenu.remove();
-          document.getElementById("time-question").remove();
+          let firstName = params.firstName;
+          document.getElementById("header").innerHTML =
+            "Hi " + firstName + " and " + secondName + "!";
           tracksPlaceholder.innerHTML = tracksTemplate({
             cosine: 100 * params.score,
             tracks: data.trackList,
             artist: data.trackList,
+            // songs: params.user1Songs, //use songs in html
+            user1Name: params.firstName,
           });
         },
       });
@@ -111,18 +101,3 @@ async function timeGetter(time) {
     }
   }
 })();
-
-function drawCircles(simScore) {
-  if (simScore >= 0 && simScore < 0.3) {
-    document.getElementById("circles::after").style.left = "190px";
-  } else if (simScore >= 0.3 && simScore < 0.5) {
-    document.getElementById("circles::after").style.left = "150px";
-  } else if (simScore >= 0.5 && simScore < 0.7) {
-    document.getElementById("circles::after").style.left = "100px";
-  } else if (simScore >= 0.7 && simScore < 0.9) {
-    document.getElementById("circles::after").style.left = "60px";
-  } else if (simScore >= 0.9 && simScore < 1) {
-    document.getElementById("circles::after").style.left = "40px";
-  }
-  //draws the circle based on similarity score
-}

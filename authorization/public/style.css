@@ -93,6 +93,10 @@ body {
 #contain-user {
   animation: fadeInAnimation ease 1s;
 }
+.column{
+  float: left;
+  width: 50%;
+}
 @font-face {
   font-family: "logo";
   src: url("./zorque/zorque.otf") format(opentype);

@@ -44,8 +44,8 @@
           </div>
           <div class="media-body">
             <dl class="dl-horizontal">
-              <dt>Name</dt><dd class="clearfix">{{display_name}}</dd>
-              <dt>Spotify URI</dt><dd><a
+              <dt>Name: </dt><dd class="clearfix">{{display_name}}</dd>
+              <dt>Spotify URI: </dt><dd><a
                   href="{{external_urls.spotify}}"
                 >{{external_urls.spotify}}</a></dd>
             </dl>
@@ -60,7 +60,7 @@
           <div id="circles">
           </div>
           <div id="contain-cos">
-            <div id="cos">Similarity Score {{cosine}}</div>
+            <div id="cos">Similarity Score: {{cosine}}%</div>
           </div>
         </dl>
       </div>
@@ -85,7 +85,7 @@
     <div id="container"></div>
     <br />
     <div>
-      <div class="title pointerCursor">
+      <div id = "time-question" class="title pointerCursor">
         What time period would you like to use?<i class="fa fa-angle-right"></i>
       </div>
 

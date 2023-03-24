@@ -9,14 +9,15 @@ the Cosine Similarity formula to calculate how similar your music taste is.
 
 ## Installation
 
-This program runs with Javascript and Node.js. Be sure to install these packages to run this file:
-    npm install express
-    npm install sqlite3
-    npm install cookie-parser
-    npm install querystring
-    npm install cors
-    npm install body-parser
-    npm install axios
+This program runs with Javascript and Node.js. Be sure to install these packages to run this file:  
+
+    npm install express  
+    npm install sqlite3  
+    npm install cookie-parser  
+    npm install querystring  
+    npm install cors  
+    npm install body-parser  
+    npm install axios  
 
 ## Usage
 

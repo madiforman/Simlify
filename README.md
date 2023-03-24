@@ -25,9 +25,9 @@ Go into authorization directory and then run this in the terminal:
     node script.js  
 
 This should appear in the terminal once this is run:  
-```md
-    ![alt text](assets/images/terminal.png)
-    ```
+
+    ![alt text](./assets/images/terminal.png)
+
 Then go to any web browser and type this url and the website will appear:
 
     localhost:8888

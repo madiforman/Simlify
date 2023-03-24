@@ -26,7 +26,7 @@ Go into authorization directory and then run this in the terminal:
 
 This should appear in the terminal once this is run:  
 
-    ![Alt text](Simlify/assets/images/terminal.png?raw=true )
+![Alt text](Simlify/assets/images/terminal.png?raw=true )
 
 Then go to any web browser and type this url and the website will appear:
 

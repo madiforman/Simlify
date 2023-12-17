@@ -381,7 +381,6 @@ app.get("/callback", function (req, res) {
                               );
                             });
                             setTimeout(() => {
-                              console.log(JSON.stringify(songList));
                               res.redirect(
                                 "/?#" +
                                   querystring.stringify({

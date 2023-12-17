@@ -32,7 +32,11 @@
       <div id="loggedin">
         <div id="user-profile1"></div>
         <div id="tracks"></div>
+        <!-- <div class="btn-container">
+          <a href="/logout" class="btn-primary">Logout with Spotify</a>
+        </div> -->
       </div>
+    <br/>
     </div>
 
     <script id="user-profile-template1" type="text/x-handlebars-template">
@@ -40,14 +44,10 @@
         <h2 id = "header"> Hi {{display_name}}!</h2>
         <div class="media">
           <div class="pull-left">
-            <img class="media-object" width="150" src="{{images.0.url}}" />
+            <!-- <img class="media-object" width="150" src="{{images.0.url}}" /> -->
           </div>
           <div class="media-body">
             <dl class="dl-horizontal">
-              <dt>Name: </dt><dd class="clearfix">{{display_name}}</dd>
-              <dt>Spotify URI: </dt><dd><a
-                  href="{{external_urls.spotify}}"
-                >{{external_urls.spotify}}</a></dd>
             </dl>
           </div>
         </div>
@@ -66,7 +66,7 @@
       </div>
       <div class="tracks-container">
         <div class="column">
-          <h2>- Your Top Tracks -</h2>
+          <h2>- {{user2Name}}'s Top Tracks -</h2>
           <table class="table">
             <thead>
             {{#each tracks}}
@@ -83,7 +83,7 @@
           </table>
         </div>
         <div class="column">
-          <h2>- Your Top Tracks -</h2>
+          <h2>- {{user1Name}}'s Top Tracks -</h2>
           <table class="table">
             <thead>
             {{#each songs}}

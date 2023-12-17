@@ -55,7 +55,6 @@ async function timeGetter(time) {
           secondName = response.display_name;
 
           userProfilePlaceholder1.innerHTML = userProfileTemplate1(response);
-          //secondName = response.data.
           $("#login").hide();
           $("#loggedin").show();
 
@@ -71,6 +70,17 @@ async function timeGetter(time) {
           let data = {
             trackList: response.items,
           };
+
+          // Capitalize the first letter of users' names
+          let firstName = params.firstName;
+          firstName = firstName.charAt(0).toUpperCase() + firstName.slice(1);
+          secondName = secondName.charAt(0).toUpperCase() + secondName.slice(1);
+          
+          document.getElementById("header").innerHTML = "Hi " + secondName + " and " + firstName + "!";
+          
+          /**
+           * Format songs and artists
+           */
           for (var i = 0; i < data.trackList.length; i++) {
             data.trackList[i].name = data.trackList[i].name + " - ";
             for (var j = 0; j < data.trackList[i].artists.length; j++) {
@@ -82,14 +92,27 @@ async function timeGetter(time) {
               }
             }
           }
-          let firstName = params.firstName;
-          document.getElementById("header").innerHTML = "Hi " + firstName + " and " + secondName + "!";
+          let songs = JSON.parse(params.songList);
+          for (var i = 0; i < songs.length; i++) {
+            songs[i].name = songs[i].name + " - ";
+            for (var j = 0; j < songs[i].artists.length; j++) {
+              songs[i].artists[j].name =
+                songs[i].artists[j].name.trim();
+              if (j != songs[i].artists.length - 1) {
+                songs[i].artists[j].name =
+                  songs[i].artists[j].name + ", ";
+              }
+            }
+          }
+
+          // Send data to front-end
           tracksPlaceholder.innerHTML = tracksTemplate({
             cosine: 100 * params.score,
             tracks: data.trackList,
             artist: data.trackList,
-           // songs: params.user1Songs, //use songs in html
-            user1Name: params.firstName,
+            songs: songs, //use songs in html
+            user1Name: firstName,
+            user2Name: secondName,
           });
           
   

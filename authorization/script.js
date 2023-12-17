@@ -198,6 +198,13 @@ app.get("/login", function (req, res) {
 
   res.redirect(`https://accounts.spotify.com/authorize?${queryParams}`);
 });
+
+/* LOGOUT AND BEGINNING OF SCRIPT */
+app.get("/logout", function (req, res) {
+  res.redirect(`https://accounts.spotify.com/en/logout`);
+  setTimeout(res.redirect('http://localhost:8888/'), 2000)
+});
+
 let user1Name = "";
 let songList = [];
 /* CREATE TABLES */
@@ -312,8 +319,18 @@ app.get("/callback", function (req, res) {
                           if (num.numUsers == 1) {
                             res.redirect("/?#");
                             user1Name = num.Name;
-                            for(let i = 0; i < trackList.length; i++){
-                              songList.push(trackList[i].name);
+                            // obtain user 1's track information
+                            for(let i = 0; i < 10; i++){
+                              arts = [];
+                              for(let j = 0; j < trackList[i].artists.length; j++){
+                                arts.push({
+                                  name: trackList[i].artists[j].name,
+                                });
+                              }
+                              songList.push({
+                                name: trackList[i].name,
+                                artists: arts,
+                              });
                             }
                           } else {
                             var userArray = [];
@@ -364,13 +381,14 @@ app.get("/callback", function (req, res) {
                               );
                             });
                             setTimeout(() => {
+                              console.log(JSON.stringify(songList));
                               res.redirect(
                                 "/?#" +
                                   querystring.stringify({
                                     access_token: access_token,
                                     refresh_token: refresh_token,
                                     score: avg_cosine_similarity(songVector0, songVector1,  50,  6),
-                                    user1Songs : songList,
+                                    songList : JSON.stringify(songList),
                                     firstName : user1Name,
                                     //add first users top tracks
                                   })

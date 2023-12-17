@@ -13,6 +13,7 @@ body {
   background-color: #e2d1f9;
   font-family: "century-gothic";
   font-weight: 400;
+  padding: 50px;
 }
 #login-next-user {
   margin-left: 220px;
@@ -48,6 +49,9 @@ body {
 .table {
   display: flex;
   justify-content: center;
+}
+button {
+  margin: 50px;
 }
 #circles {
   width: 200px;

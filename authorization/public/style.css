@@ -9,6 +9,12 @@ h2 {
   text-align: center;
   font-family: "century-gothic";
 }
+#under_name {
+  text-align: center;
+  font-family: "century-gothic";
+  font-size: .7em;
+  animation: fadeInAnimation ease 3s;
+}
 body {
   background-color: #e2d1f9;
   font-family: "century-gothic";
@@ -21,19 +27,20 @@ body {
   color: black;
 }
 .btn-container {
-  display: flex;
   justify-content: center;
   align-items: center;
   text-align: center;
+  padding: 5px;
+  animation: fadeInAnimation ease 2s;
 }
 .btn-primary {
-  height: 50px;
-  width: 310px;
-  font-size: 33px;
+  width: 20vw;
+  font-size: 3vw;
   background-color: #fcf6f5ff;
   color: black;
   border-radius: 10px;
   animation: fadeInAnimation ease 2s;
+  padding: 5px;
 }
 .btn-primary:hover {
   background-color: #bb86c2;

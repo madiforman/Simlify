@@ -199,14 +199,15 @@ app.get("/login", function (req, res) {
   res.redirect(`https://accounts.spotify.com/authorize?${queryParams}`);
 });
 
-/* LOGOUT AND BEGINNING OF SCRIPT */
-app.get("/logout", function (req, res) {
-  res.redirect(`https://accounts.spotify.com/en/logout`);
-  setTimeout(res.redirect('http://localhost:8888/'), 2000)
-});
+/* LOGOUT */
+// app.get("/logout", function (req, res) {
+//   res.redirect(`https://accounts.spotify.com/en/logout`);
+//   setTimeout(res.redirect('http://localhost:8888/'), 2000)
+// });
 
 let user1Name = "";
 let songList = [];
+firstUser = "false";
 /* CREATE TABLES */
 db.serialize(() => {
   db.run("DROP TABLE IF EXISTS Music");
@@ -317,7 +318,11 @@ app.get("/callback", function (req, res) {
                         "SELECT Name, COUNT(userID) AS numUsers FROM Users",
                         (err, num) => {
                           if (num.numUsers == 1) {
-                            res.redirect("/?#");
+                            firstUser = "true";
+                            res.redirect("/?#" + 
+                            querystring.stringify({
+                              firstUser: firstUser,
+                            }));
                             user1Name = num.Name;
                             // obtain user 1's track information
                             for(let i = 0; i < 10; i++){
@@ -387,9 +392,9 @@ app.get("/callback", function (req, res) {
                                     access_token: access_token,
                                     refresh_token: refresh_token,
                                     score: avg_cosine_similarity(songVector0, songVector1,  50,  6),
-                                    songList : JSON.stringify(songList),
+                                    songList : JSON.stringify(songList), //add first users top tracks
                                     firstName : user1Name,
-                                    //add first users top tracks
+                                    firstUser : firstUser,
                                   })
                               );
                             }, "1000");

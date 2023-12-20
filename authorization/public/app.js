@@ -45,6 +45,10 @@ async function timeGetter(time) {
   } else {
     let secondName = "";
     if (access_token) {
+
+      /**
+       * Request personal information
+       */
       $.ajax({
         url: "https://api.spotify.com/v1/me",
         headers: {
@@ -61,6 +65,9 @@ async function timeGetter(time) {
         },
       });
 
+      /**
+       * Request top track information
+       */
       $.ajax({
         url: await timeGetter(timePeriod),
         headers: {
@@ -79,7 +86,7 @@ async function timeGetter(time) {
           document.getElementById("header").innerHTML = "Hi " + secondName + " and " + firstName + "!";
           
           /**
-           * Format songs and artists
+           * Format songs and artists for user 2
            */
           for (var i = 0; i < data.trackList.length; i++) {
             data.trackList[i].name = data.trackList[i].name + " - ";
@@ -92,6 +99,10 @@ async function timeGetter(time) {
               }
             }
           }
+
+          /**
+           * Undo stringify on the JSON data & format songs and artists for user 1
+           */
           let songs = JSON.parse(params.songList);
           for (var i = 0; i < songs.length; i++) {
             songs[i].name = songs[i].name + " - ";
@@ -110,7 +121,7 @@ async function timeGetter(time) {
             cosine: 100 * params.score,
             tracks: data.trackList,
             artist: data.trackList,
-            songs: songs, //use songs in html
+            songs: songs,
             user1Name: firstName,
             user2Name: secondName,
           });
@@ -121,6 +132,14 @@ async function timeGetter(time) {
     } else {
       $("#login").show();
       $("#loggedin").hide();
+      if(params.firstUser == "true") {
+        let secondUser = document.createElement("div");
+        secondUser.setAttribute("id", "under_name");
+        secondUser.innerHTML = "LOG IN SECOND USER";
+        secondUser.style.padding = '10px';
+        let btn = document.getElementById("btn")
+        btn.appendChild(secondUser);
+      }
     }
   }
 })();
